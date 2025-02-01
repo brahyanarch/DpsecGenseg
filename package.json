@@ -1,0 +1,43 @@
+{
+  "name": "backendgenseg",
+  "version": "1.0.0",
+  "description": "Endpoint genseg",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "tsnd --respawn --clear src/server.ts"
+  },
+  "author": "genseg",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.5.5",
+    "@types/pdfkit": "^0.13.8",
+    "@types/qrcode": "^1.5.5",
+    "@types/swagger-ui-express": "^4.1.7",
+    "@types/yamljs": "^0.2.34",
+    "multer": "^1.4.5-lts.1",
+    "prisma": "^5.19.1",
+    "rimraf": "^6.0.1",
+    "swagger-ui-express": "^5.0.1",
+    "ts-node-dev": "^2.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.16.0",
+    "qrcode": "^1.5.4",
+    "swagger": "^0.7.5",
+    "swagger-jsdoc": "^6.2.8",
+    "typescript": "^5.6.2",
+    "yamljs": "^0.3.0"
+  }
+}

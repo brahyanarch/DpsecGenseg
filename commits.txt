@@ -1,0 +1,182 @@
+commit 74028c83dc128baf163c4c1eca01616afdd50dd2
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Mon Dec 16 00:23:51 2024 -0500
+
+    arreglando el formuilario proyectos y actividades
+
+commit 2e63a08a7a2a4ade12b38ec8632d869ae584358b
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Fri Dec 13 13:14:57 2024 -0500
+
+    agregando para el projecto
+
+commit 2cfd9fc343b062c4f3e66374371a96b914b550ab
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Wed Dec 11 12:52:19 2024 -0500
+
+    end point de preguntas agregado correctamente
+
+commit a6898d5c4a53278252ece5c071ebe32da69cd277
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Sat Nov 30 17:12:34 2024 -0500
+
+    arreglando las rutas de berning
+
+commit 30593f70fc222b2492be765a30e018aeae411ce6
+Merge: bb570a4 7d5ef15
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Tue Nov 26 18:28:51 2024 -0500
+
+    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
+
+commit bb570a473b7f5c80a27462b425620aaf2b92216c
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Tue Nov 26 18:26:51 2024 -0500
+
+    agregando y corrigiendo el admin general
+
+commit 7d5ef15e0a4104654fdc9fcbaa3a9d4f90e0c74d
+Merge: 04ee610 d014354
+Author: berning <bernardpari2002@gmail.com>
+Date:   Tue Nov 26 18:15:56 2024 -0500
+
+    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
+
+commit 04ee610e8f9c8dbe90c2282d267ffb74e4f84c69
+Author: berning <bernardpari2002@gmail.com>
+Date:   Tue Nov 26 18:14:37 2024 -0500
+
+    Añadiendo API para cambiar el estado de un cliente
+
+commit d014354ca348133c918bef341596faac1d7901c1
+Merge: e69706f 84c514c
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Fri Nov 22 12:04:35 2024 -0500
+
+    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
+
+commit e69706f7d92d2809802ce641c5611352a7b42f33
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Fri Nov 22 12:03:51 2024 -0500
+
+    comentarios
+
+commit c11e7e9e52e080bf3fa8267fe1be2c1a4c2d79e7
+Merge: 558482b 84c514c
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Thu Nov 21 21:26:10 2024 -0500
+
+    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
+    subiendo apis de formulario#
+
+commit 84c514c2620daabd39c1cf9d0b26d34f5c129f40
+Author: berning <bernardpari2002@gmail.com>
+Date:   Thu Nov 21 21:25:29 2024 -0500
+
+    Definiendo mas APIS
+
+commit 558482b384d8d2f014f2ee3248a0ebe836e9fcfd
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Thu Nov 21 21:21:44 2024 -0500
+
+    agregando algunos cambios
+
+commit 8e76f225a0fdfeef6f922a69c9e62bcdb67c1dd1
+Merge: b6d0e04 ea9eb76
+Author: berning <bernardpari2002@gmail.com>
+Date:   Thu Nov 21 19:15:43 2024 -0500
+
+    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
+
+commit b6d0e0437e601e8f975308018b7900294ba7878b
+Author: berning <bernardpari2002@gmail.com>
+Date:   Thu Nov 21 19:15:32 2024 -0500
+
+    agregando API para formularios
+
+commit ea9eb765775c785320d3d8f393d8ab446dbdb91a
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Thu Nov 21 11:07:31 2024 -0500
+
+    agregando formulario
+
+commit 3a79fefbf3eac53bf895f538b907878f6f02fdaf
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Tue Nov 19 11:21:17 2024 -0500
+
+    Agregando y modificando los subunidades usuarios
+
+commit f426256bbc55d063007125b5a45293c93849aa82
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Tue Oct 29 12:46:57 2024 -0500
+
+    agregando preguntas dinamicas
+
+commit 3672945ba6aaf9c8e4b6bdc890d267d10d90c7cb
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Sun Oct 6 16:18:24 2024 -0500
+
+    Arreglando los privilegios listo para usarse
+
+commit 1ff9f3b3edfd882b739e1a313b808288e0ae6c70
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Tue Oct 1 12:15:48 2024 -0500
+
+    gestor de privilegios aun no terminado
+
+commit cf56c0a8e8fba95353cb878c9a7d84c151ec0599
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Mon Sep 30 14:36:21 2024 -0500
+
+    agregando a prisma los roles
+
+commit 75a054eb8fe7efdb6cab79a5e562f48b3bcad70b
+Author: davidefqon <davidlarotapilco@gmail.com>
+Date:   Mon Sep 30 09:53:53 2024 -0500
+
+    camvios totales
+
+commit de4659f7f0455214f4480f549d092850d25db924
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Fri Sep 27 10:57:06 2024 -0500
+
+    cors
+
+commit e94d54a16244d1d910ede7b0a2774fefa5cd92b2
+Author: Lenin Chura <lenin1alonso@gmail.com>
+Date:   Fri Sep 27 08:00:04 2024 -0500
+
+    Controller Permisos y roles
+
+commit d533a29e1452971adcc84cc5a8a38b0895f2ed69
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Wed Sep 25 11:16:15 2024 -0500
+
+    Cambio Login
+
+commit 7813ee07a75368f4487f4730325672d11f889800
+Merge: 7bcf13c 50c940c
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Wed Sep 25 09:57:31 2024 -0500
+
+    Merge branch 'main' of https://github.com/LeninDes/gensegBackend
+
+commit 7bcf13c1d659fe74dd20d2fd380146ac873b57fa
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Wed Sep 25 09:55:44 2024 -0500
+
+    cambio comparacion de contrasenias
+
+commit 50c940c7ed547876ee2a69598d75f18d67d1ee95
+Author: Lenin Chura / <66321895+LeninDes@users.noreply.github.com>
+Date:   Sun Sep 22 10:11:09 2024 -0500
+
+    Create README.md
+    
+    Configuración .env
+
+commit 7d82bf763213faf468af26f616c5888a6b2c8399
+Author: LeninDes <lenin1alonso@gmail.com>
+Date:   Sun Sep 22 10:03:03 2024 -0500
+
+    V1 backend login

@@ -1,0 +1,432 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRESDB_URL")
+}
+
+// USUARIO ADMINIDTRADOR
+model User {
+  id Int  @id @default(autoincrement())
+  usuario String @unique
+  password String
+}
+  
+// TABLA DE ROLES
+model Rol {
+  id_rol      Int     @id     @default(autoincrement())
+  n_rol       String  @unique
+  abrev       String
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  
+  datellePermisos   DetallePermiso[]
+  usuarios          Usuario[]
+}
+
+model Permiso {
+  id_per            Int     @id     @default(autoincrement())
+  n_per             String  @unique
+  abreviatura       String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  datellePermisos    DetallePermiso[]
+}
+
+model DetallePermiso {
+  id_dper           Int     @id     @default(autoincrement())
+  id_rol            Int 
+  id_per            Int
+  estado            Boolean @default(false)
+  permisos  Permiso @relation(fields: [id_per], references: [id_per])
+  roles     Rol @relation(fields: [id_rol], references: [id_rol])
+}
+
+model Sub_unidad {
+  id_subuni Int @id @default(autoincrement())
+  n_subuni  String  @unique
+  abreviatura     String
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  usuarios     Usuario[]
+  form         Form[]
+  plantillas   Plantilla[]
+}
+model Usuario {
+  dni                   String @db.Char(8)
+  nombre                String 
+  APaterno              String
+  AMaterno              String
+  estado                Boolean @default(true)
+  password              String
+  email                 String
+  idpe                  Int?
+  rol_id                Int
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  subunidad_id_subuni   Int   
+  
+  rol                   Rol         @relation(fields: [rol_id], references: [id_rol])
+  sub_uni               Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
+  prgest                PrgEstudio?  @relation(fields: [idpe], references: [idpe])
+  proyectos             Project[]
+  @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
+}
+
+
+
+model Form {
+  idf       Int @id @default(autoincrement())
+  nmForm    String  
+  estado    Boolean @default(false)
+  abre      String?
+
+  Fcreate   DateTime  @default(now())
+  Fupdate   DateTime? 
+
+  idsubuni  Int
+  subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
+  prg       Prg[]
+  res       Res[]
+}
+
+
+model Prg {
+  idp       Int @id @default(autoincrement())
+  nmPrg     String  
+  idf       Int
+  type      String
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  form      Form  @relation(fields: [idf], references: [idf])
+  opcmul    OpcMul[]
+  opcuni    OpcUni[]
+  opcdes    OpcDes[]
+  resom     ResOM[]
+  resou     ResOU[]
+  resod     ResOD[]
+  restxt    ResTxt[]
+  resfile   ResFile[]
+  resdate   ResDate[]
+}
+
+model Res {
+  idres     Int @id @default(autoincrement())
+  idf       Int
+  date      DateTime  @default(now())
+  form      Form  @relation(fields: [idf], references: [idf])
+  resom     ResOM[]
+  resou     ResOU[]
+  resod     ResOD[]
+  restxt    ResTxt[]
+  resfile   ResFile[]
+  resdate   ResDate[]
+  actividad Actividad[]
+}
+
+model OpcMul {
+  idomul    Int @id @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg   @relation(fields: [idp], references: [idp])
+  resom     ResOM[]
+}
+
+model OpcUni {
+  idoUni    Int   @id   @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg   @relation(fields: [idp], references: [idp])
+  resou     ResOU[]
+}
+
+model OpcDes {
+  idodes    Int   @id   @default(autoincrement())
+  idp       Int
+  txtOpc    String
+  prg       Prg     @relation(fields: [idp], references: [idp])
+  resod     ResOD[]
+}
+
+model ResOM {
+  idresom     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idomul      Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcmul      OpcMul  @relation(fields: [idomul], references: [idomul])
+}
+
+model ResOU {
+  idresou     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idou        Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcuni      OpcUni  @relation(fields: [idou], references: [idoUni])
+}
+
+model ResOD {
+  idresod     Int   @id     @default(autoincrement())
+  idres       Int
+  idp         Int
+  idodes      Int
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+  opcdes      OpcDes  @relation(fields: [idodes], references: [idodes])
+}
+
+model ResTxt {
+  idrestxt    Int   @id   @default(autoincrement())
+  idp         Int
+  idres       Int
+  resTxt      String?
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+model ResFile {
+  idresfile   Int   @id   @default(autoincrement())
+  idres       Int
+  idp         Int
+  resFile     String?
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+model ResDate {
+  idresdate   Int   @id   @default(autoincrement())
+  idres       Int
+  idp         Int
+  resdate     DateTime  
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
+
+model Facu {
+  idfacu    Int @id @default(autoincrement())
+  nmFacu    String
+  abrev     String?
+  
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  escuelas  Escuela[]
+}
+
+model Escuela {
+  idesc     Int @id @default(autoincrement())
+  nmEsc     String
+  idfacu    Int
+  abrev     String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  
+  facu      Facu @relation(fields: [idfacu], references: [idfacu])
+  prgest    PrgEstudio[]
+}
+
+model PrgEstudio {
+  idpe      Int @id @default(autoincrement())
+  nmPE      String
+  abrev     String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  idesc     Int
+  escuela   Escuela @relation(fields: [idesc], references: [idesc])
+  usuario   Usuario[]
+  estudiante Estudiante[]
+}
+
+model Estudiante {
+  idest     Int     @id @default(autoincrement())
+  dni       String  
+  codigo    String  @unique @db.Char(6)
+  nombre    String
+  aPaterno  String
+  aMaterno  String
+  email     String  
+  fechaNacimiento DateTime
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  idpe      Int
+  prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
+  actividades AlumnoActividad[]
+  receptor    Receptor[]
+}
+
+enum EstadoProyecto {
+  PENDIENTE
+  ARCHIVADO
+  CURSO
+  COMPLETADO
+}
+enum TipoProyecto {
+  SUBUNIDAD
+  PROGRAMAESTUDIO
+}
+
+model Project {
+  idproj                Int     @id   @default(autoincrement())
+  plan                  String  
+  estado                String
+  dni                   String
+  tipo                  TipoProyecto
+  idString              String?
+  fInit                 DateTime?
+  fFin                  DateTime?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  id_rol                Int
+  subunidad_id_subuni   Int
+  usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
+  actividad             Actividad[]
+}
+
+model Actividad {
+  idActivi              Int     @id   @default(autoincrement())
+  name                  String  @unique
+  fInit                 DateTime
+  fFin                  DateTime
+  estado                String
+  idString              String?
+  public                Boolean   @default(false)
+  tipo                  String    @default("normal")
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  idproj                Int
+  idres                 Int
+  project               Project   @relation(fields: [idproj], references: [idproj])
+  res                   Res       @relation(fields: [idres], references: [idres])
+  alumnoActividad       AlumnoActividad[]
+}
+
+enum EstadoAlumnoActividad {
+  INSCRITO
+  COMPLETADO
+  ABANDONADO
+}
+
+model AlumnoActividad {
+  id          Int            @id @default(autoincrement())
+  alumnoId    Int
+  actividadId Int
+  estado      EstadoAlumnoActividad         // Ej: Inscrito, Completado, Abandonado
+  asistio     Boolean        @default(false)
+  fechaInscripcion  DateTime  @default(now())
+  fechaConluida     DateTime? // Opcional: Fecha de completado de la actividad
+  alumno      Estudiante         @relation(fields: [alumnoId], references: [idest]) // Relación con Alumno
+  actividad   Actividad      @relation(fields: [actividadId], references: [idActivi]) // Relación con Actividad
+  notaFinal   Float?         // Opcional: Nota de evaluación en la actividad
+
+}
+
+model Plantilla {
+  idplantilla  Int @id @default(autoincrement())
+  nombre       String
+  idsubunidad  Int
+  urlimg       String
+  tipo         TipoReceptor
+  titulo       String?
+  cuerpo       String?
+  pie          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  subunidad    Sub_unidad @relation(fields: [idsubunidad], references: [id_subuni])
+  certificados Certificado[]
+}
+
+enum TipoReceptor {
+  PARTICIPANTE
+  ORGANIZADOR
+  COLABORADOR
+  EXTERNO
+}
+
+model Certificado {
+  idcertificado   Int        @id @default(autoincrement())
+  idreceptor      Int
+  codigo          String     @unique
+  nombre          String
+  createdAt       DateTime   @default(now())
+  tipo            TipoReceptor     // 'Participante', 'Organizador', etc.
+  idplantilla     Int     // URL de la plantilla del certificado
+  actividad_ids   Int[]       // IDs de las actividades asociadas [1,2,3]
+  urlpdf          String?     // Opcional: URL del PDF generado   
+  QR              String?     // Opcional: URL del QR del certificado
+  plantilla       Plantilla  @relation(fields: [idplantilla], references: [idplantilla])
+  receptor        Receptor   @relation(fields: [idreceptor], references: [id_receptor])
+}
+
+enum Tipo {
+  ESTUDIANTE
+  EXTERNO
+}
+
+model Receptor {
+  id_receptor   Int @id @default(autoincrement())
+  tipo          Tipo // 'Estudiante', 'Externo', etc.
+  id_estudiante Int? // FK hacia Estudiante
+  id_externo    Int? // FK hacia Externo
+  
+  estudiante    Estudiante? @relation(fields: [id_estudiante], references: [idest])
+  externo       Externo?    @relation(fields: [id_externo], references: [id_ext])
+  certificados  Certificado[] // Relación con certificados emitidos a este receptor
+}
+
+model Externo {
+  id_ext     Int      @id @default(autoincrement())
+  nombre     String
+  apellido   String
+  email      String?  // Opcional, si deseas permitir certificados sin correo electrónico
+  dni        String  @unique// Opcional, si necesitas identificar externamente con un documento
+  telefono   String?  // Información de contacto adicional
+  receptor   Receptor[] // Relación con los receptores externos
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Carrusel {
+  idcarrusel    Int @id @default(autoincrement())
+  img           String
+  titulo        String
+  subtitulo     String
+}
+
+model Anuncio {
+  idanuncio     Int @id @default(autoincrement())
+  titulo        String
+  descripcion   String
+  fInicio       DateTime
+  fFin          DateTime
+}
