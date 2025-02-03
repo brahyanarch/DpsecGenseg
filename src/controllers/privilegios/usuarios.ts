@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { PrismaClient, Usuario } from "@prisma/client";
 import { emit } from "process";
+import {hashPassword} from '../../services/password.service'
 
 const prisma = new PrismaClient();
 dotenv.config();
@@ -116,83 +117,94 @@ export const loginUniqueUser = async (req: Request, res: Response): Promise<void
 
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-    const { dni, email, nombre, aPaterno, aMaterno, password, rol_id, id_sub, idpe } = req.body;
+    const { dni, email, nombre, aPaterno, aMaterno, password, idpe } = req.body;
 
   try {
-    if(!dni || !nombre || !aMaterno || !aPaterno || !password || !rol_id || !id_sub || !email ){
-      res.status(400).json({ message: "Todos los campos son obligatorios." });
-      return;
+    let programa = null;
+    if (idpe) {
+      const programaEst = await prisma.prgEstudio.findUnique({ where: { idpe } });
+      if (!programaEst) {
+          res.status(400).json({ message: "El programa de estudio no existe." });
+          return;
+      }
+      programa = idpe;
     }
-
-    // Verificar si el usuario con la misma combinación de dni, rol_id, id_sub ya existe
-    const existingUser = await prisma.usuario.findUnique({
+    // Verificar si el usuario ya existe (por dni o email)
+    const existingUser = await prisma.datosUsuario.findFirst({
       where: {
-        dni_rol_id_subunidad_id_subuni: {
-          dni: dni,
-          rol_id: Number(rol_id),
-          subunidad_id_subuni: Number(id_sub),
-
-        },
-      },
-    });
+          OR: [
+              { dni },
+              { email }
+          ]
+      }
+  });
     
     if (existingUser) {
-      res.status(400).json({ message: "El usuario con este rol y subunidad ya existe." });
+      res.status(400).json({ message: "El usuario ya existe " });
       return;
     }
+    
+    const hashedPassword = await hashPassword(password);
 
-    const dniUser = await prisma.usuario.findFirst({
-      where: {
+    const newDataUser = await prisma.datosUsuario.create({
+      data: {
         dni: dni,
-      },
+        email: email,
+        nombre: nombre,
+        APaterno: aPaterno,
+        AMaterno: aMaterno,
+        password: hashedPassword,
+        idpe: programa 
+      }
     });
+    // Excluir la contraseña de la respuesta
+    const { password: _, ...userWithoutPassword } = newDataUser;
 
-    if (dniUser) {
-      const newUser = await prisma.usuario.create({
-        data: {
-          dni: dniUser.dni,
-          nombre: dniUser.nombre,
-          APaterno: dniUser.APaterno,
-          AMaterno: dniUser.AMaterno,
-          password: dniUser.password,
-          email: dniUser.email,
-          rol_id: Number(rol_id),
-          subunidad_id_subuni: Number(id_sub),
-          estado: true,
-          idpe: dniUser.idpe,
-        },
-      });
-      res
-        .status(201)
-        .json({ message: "Usuario creado correctamente.", newUser });
-    } else {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      // Crear el nuevo usuario
-      const newUser = await prisma.usuario.create({
-        data: {
-          idpe: Number(idpe),
-          dni: dni,
-          email: email,
-          nombre: nombre,
-          APaterno: aPaterno,
-          AMaterno: aMaterno,
-          password: hashedPassword,
-          rol_id: Number(rol_id),
-          subunidad_id_subuni: Number(id_sub),
-          estado: true,
-        },
-      });
-      res.status(201).json({ message: "Usuario creado correctamente.", newUser });
-      return;
-    }
+    // Respuesta exitosa
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     //console.error(error);
     res.status(500).json({ message: "Error al crear el usuario.", error });
     return;
-  } finally {
-    await prisma.$disconnect();
-  }
+  } 
 };
+
+export const AsignateRolSubunidad = async (req: Request, res:Response): Promise<void> => {
+    const {idrol, idsubunidad, iddatauser} = req.body;
+    try {
+      const rol = await prisma.rol.findUnique({where:{id_rol: idrol}});
+      if(!rol){
+        res.status(401).json({message: 'El rol no existe'});
+        return;
+      }
+      const subunidad = await prisma.sub_unidad.findUnique({where:{id_subuni: idsubunidad}});
+      if(!subunidad){
+        res.status(401).json({message: 'La sub unidad no existe'});
+        return;
+      }
+      const dataUser = await prisma.datosUsuario.findUnique({where:{iddatauser:iddatauser}});
+      if(!dataUser){
+        res.status(401).json({message: 'El usuario no existe'});
+        return;
+      }
+      
+      const newUserAsigned = await prisma.usuario.create({
+        data: {
+          iddatauser: iddatauser,
+          idrol: idrol,
+          idsubunidad: idsubunidad
+        }
+      })
+      
+      res.status(200).json({message: 'usuario asignado correctamente', newUserAsigned});
+    } catch (error:any) {
+      // VALIDAR DUPLICIDAD
+      if(error?.code === 'P2002' && error?.meta?.target?.includes('usuario')){
+        res.status(500).json({message: 'El usuario ya existe'});
+        return;
+    }
+    }
+} 
 
 export const AllUser = async (req: Request, res: Response): Promise<void> => {
 

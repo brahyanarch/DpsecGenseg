@@ -7,20 +7,17 @@ import { generateToken } from "../services/auth.service";
 export const register = async (req: Request, res: Response): Promise<void> => {
     const {usuario, password} = req.body;
     try {
-        // VALIDAMOS EL PASSWORD Y USUARIO
-        if(!password) {
-            res.status(400).json({
-                message: 'La contrasenia es obligaroria'
-            })
-            return;
-        };
-        if(!usuario) {
-            res.status(400).json({
-                message: 'El usuario es obligarorio'
-            })
-            return;
-        };
+        const existuser = await prisma.findUnique({
+            where: {
+                usuario: usuario
+            }
+        });
 
+        if(existuser)
+        {
+            res.status(409).json({message:"el usuario ya existe"});
+            return;
+        }
         const hashedPassword = await hashPassword(password);
 
         const user = await prisma.create(
@@ -33,8 +30,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         )
 
         // Generarmos el token
-        const token = generateToken(user)
-        res.status(201).json({token});
+        //const token = generateToken(user)
+        res.status(201).json({message:"Usuario registrado correctamente"});
         return;
     } catch (error: any) {
         // TODO para manejar los errores
@@ -80,38 +77,43 @@ export const login = async(req: Request, res: Response): Promise<void> => {
     
     try {
 
-        // VALIDAR EL USUARIO
-        if(!usuario){
-            res.status(400).json({
-                message: 'El uusario es obligatorio'
-            })
-            return;
-        }
-        
-        //VALIDAR EL PASSWORD
-        if(!password){
-            res.status(400).json({
-                message: 'La contrasenia es obligaroria'
-            })
-            return;
-        }
-
         const user = await prisma.findUnique({where: {usuario}})
         
         // Comprobamos si el usuario existe
         if(!user){
-            res.status(404).json({error: 'Usuario no encontrado'});
+            res.status(404).json({error: 'Usuario incorrecto'});
             return;
         }
-
+         // Verificar si el usuario está bloqueado temporalmente
+         const blockDuration = 15 * 60 * 1000; // 15 minutos
+         if (user.failedAttempts >= 5 && user.lastFailedAttempt && 
+             (Date.now() - new Date(user.lastFailedAttempt).getTime()) < blockDuration) {
+             res.status(429).json({ message: 'Cuenta bloqueada temporalmente. Inténtalo de nuevo más tarde.' });
+             return;
+         }
         // Comparamos las password
         const passwordMatch = await comparePasswords(password, user.password);
         if(!passwordMatch){
-            res.status(401).json({
-                error: 'Usuario y contrasenias no coinciden'
-            })
+            // Incrementar el contador de intentos fallidos
+            await prisma.update({
+                where: { id: user.id },
+                data: {
+                    failedAttempts: user.failedAttempts + 1,
+                    lastFailedAttempt: new Date(),
+                },
+            });
+
+            res.status(401).json({ message: 'Contraseña incorrecta' });
             return;
         }
+        // Restablecer el contador de intentos fallidos
+        await prisma.update({
+            where: { id: user.id },
+            data: {
+                failedAttempts: 0,
+                lastFailedAttempt: null,
+            },
+        });
 
         const token = generateToken(user)
         res.status(201).json({token})
@@ -119,5 +121,34 @@ export const login = async(req: Request, res: Response): Promise<void> => {
         
     } catch (error: any) {
         console.log('Error: ' + error)
+    }
+}
+
+
+export const Me = async(req: Request, res: Response): Promise<void> => {
+
+    try {
+
+        // VALIDAR EL USUARIO
+        if(!req.user){
+            res.status(400).json({
+                message: 'El uusario es obligatorio'
+            })
+            return;
+        }
+        
+        const user = await prisma.findUnique({where: {usuario: req.user.usuario}, select : {usuario: true, id: true}});
+        
+        // Comprobamos si el usuario existe
+        if(!user){
+            res.status(404).json({error: 'Usuario no encontrado'});
+            return;
+        }
+
+        res.status(201).json(user);
+        return;
+    } catch (error: any) {
+        console.log('Error: ' + error)
+        return;
     }
 }

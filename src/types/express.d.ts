@@ -1,17 +1,15 @@
 import { Request } from 'express';
+import { Usuario} from "@prisma/client";
+import { User } from "../models/interface/user.interface"
+
 
 // Extender la interfaz Request para incluir la propiedad 'user'
 declare global {
     namespace Express {
         interface Request {
-            user?: {
-                dni: string;
-                n_usu: string;
-                estado: boolean;
-                rol_id: number;
-                subunidad_id_subuni: number;
-                [key: string]: any; // Si tienes más campos dinámicos
-            };
+            user?: User;
         }
     }
 }
+
+export {};

@@ -25,15 +25,15 @@ import Pagina from './routes/pagina/pagina'
 import Anuncio from './routes/pagina/anuncio'
 import Plantilla from './routes/certificado/plantilla'
 import Certificado from './routes/certificado/certificado'*/
-//import swaggerUi from 'swagger-ui-express';
-//import yaml from 'yamljs';
+import swaggerUi from 'swagger-ui-express';
+import yaml from 'yamljs';
 //--------------
 // APP CON EXPRESS
 const app = express()
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Parsear archivos YAML
-//const swaggerDocument = yaml.load('./swagger.yaml');
+const swaggerDocument = yaml.load('./swagger.yaml');
 
 app.use(express.json());
 

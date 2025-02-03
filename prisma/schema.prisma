@@ -15,11 +15,13 @@ datasource db {
 
 // USUARIO ADMINIDTRADOR
 model User {
-  id Int  @id @default(autoincrement())
-  usuario String @unique
-  password String
+  id Int            @id @default(autoincrement())
+  usuario           String @unique
+  password          String
+  failedAttempts    Int @default(0) // Número de intentos fallidos
+  lastFailedAttempt DateTime? // Hora del último intento fallido
 }
-  
+
 // TABLA DE ROLES
 model Rol {
   id_rol      Int     @id     @default(autoincrement())
@@ -65,44 +67,54 @@ model Sub_unidad {
   form         Form[]
   plantillas   Plantilla[]
 }
-model Usuario {
-  dni                   String @db.Char(8)
-  nombre                String 
+
+model DatosUsuario {
+  iddatauser            Int     @id @default(autoincrement())
+  dni                   String  @db.Char(8) @unique
+  email                 String  @unique
+  nombre                String
   APaterno              String
   AMaterno              String
-  estado                Boolean @default(true)
   password              String
-  email                 String
   idpe                  Int?
-  rol_id                Int
+  deletedAt             DateTime? // Campo para soft delete
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  subunidad_id_subuni   Int   
-  
-  rol                   Rol         @relation(fields: [rol_id], references: [id_rol])
-  sub_uni               Sub_unidad  @relation(fields: [subunidad_id_subuni], references: [id_subuni])
+  usuario               Usuario[]
   prgest                PrgEstudio?  @relation(fields: [idpe], references: [idpe])
-  proyectos             Project[]
-  @@id([dni, rol_id, subunidad_id_subuni]) // Clave primaria compuesta
 }
 
+model Usuario {
+  iduser                Int     @id @default(autoincrement())
+  estado                Boolean @default(true)
 
+  idrol                 Int     
+  idsubunidad           Int
+  iddatauser            Int
+
+  roles                 Rol           @relation(fields: [idrol], references: [id_rol])
+  subunidad             Sub_unidad    @relation(fields: [idsubunidad], references: [id_subuni])
+  datausuario           DatosUsuario  @relation(fields: [iduser], references: [iddatauser])
+
+  project               Project[]
+  @@unique([idrol, idsubunidad, iddatauser])
+}
 
 model Form {
-  idf       Int @id @default(autoincrement())
-  nmForm    String  
-  estado    Boolean @default(false)
-  abre      String?
+  idf         Int @id @default(autoincrement())
+  nmForm      String  
+  estado      Boolean @default(false)
+  abre        String?
 
-  Fcreate   DateTime  @default(now())
-  Fupdate   DateTime? 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? 
 
-  idsubuni  Int
-  subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
-  prg       Prg[]
-  res       Res[]
+  idsubuni    Int
+  subunidad   Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
+  prg         Prg[]
+  res         Res[]
 }
 
 
@@ -125,12 +137,17 @@ model Prg {
   restxt    ResTxt[]
   resfile   ResFile[]
   resdate   ResDate[]
+  resnum    ResNum[]
 }
 
 model Res {
   idres     Int @id @default(autoincrement())
-  idf       Int
   date      DateTime  @default(now())
+
+  idf       Int
+
+  createdAt             DateTime       @default(now())
+  
   form      Form  @relation(fields: [idf], references: [idf])
   resom     ResOM[]
   resou     ResOU[]
@@ -138,6 +155,8 @@ model Res {
   restxt    ResTxt[]
   resfile   ResFile[]
   resdate   ResDate[]
+  resnum    ResNum[]
+
   actividad Actividad[]
 }
 
@@ -222,6 +241,15 @@ model ResDate {
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
 
+model ResNum {
+  idresnum    Int   @id   @default(autoincrement())
+  idres       Int
+  idp         Int
+  resnum      DateTime  
+  res         Res     @relation(fields: [idres], references: [idres])
+  prg         Prg     @relation(fields: [idp], references: [idp])
+}
+
 
 model Facu {
   idfacu    Int @id @default(autoincrement())
@@ -257,8 +285,9 @@ model PrgEstudio {
 
   idesc     Int
   escuela   Escuela @relation(fields: [idesc], references: [idesc])
-  usuario   Usuario[]
+
   estudiante Estudiante[]
+  DatosUsuario DatosUsuario[]
 }
 
 model Estudiante {
@@ -268,8 +297,8 @@ model Estudiante {
   nombre    String
   aPaterno  String
   aMaterno  String
-  email     String  
-  fechaNacimiento DateTime
+  email     String
+  fechaNacimiento DateTime?
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -295,7 +324,6 @@ model Project {
   idproj                Int     @id   @default(autoincrement())
   plan                  String  
   estado                String
-  dni                   String
   tipo                  TipoProyecto
   idString              String?
   fInit                 DateTime?
@@ -304,9 +332,12 @@ model Project {
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
+  dni                   String
   id_rol                Int
   subunidad_id_subuni   Int
-  usuario               Usuario @relation(fields: [dni, id_rol, subunidad_id_subuni], references: [dni, rol_id, subunidad_id_subuni])  
+  iduser                Int
+
+  usuario               Usuario @relation(fields: [iduser], references: [iduser])  
   actividad             Actividad[]
 }
 
