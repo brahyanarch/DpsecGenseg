@@ -18,7 +18,7 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
             idsubuni: Number(idsubunidad),
             nmForm:name,
             abre: abrev,
-            Fcreate: date,
+            createdAt: date,
           },
         });
         res.status(201).json(newForm);
@@ -174,7 +174,7 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
             data: {
                 nmForm: name,
                 abre: abrev,
-                Fupdate: date,
+                updatedAt: date,
             },
         });
 
@@ -226,7 +226,7 @@ export const updateEstado = async (req: Request, res: Response): Promise<void> =
             const updatedSubUnidad = await prisma.form.update({
                 where: { idf: formId },
                 data: {
-                    Fupdate: date,
+                    updatedAt: date,
                     estado: true,
                 },
             });
@@ -244,7 +244,7 @@ export const updateEstado = async (req: Request, res: Response): Promise<void> =
             const updatedSubUnidad = await prisma.form.update({
                 where: { idf: formId },
                 data: {
-                    Fupdate: date,
+                    updatedAt: date,
                     estado: true,
                 },
             });

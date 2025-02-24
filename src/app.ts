@@ -9,11 +9,11 @@ const cors = require('cors')
 
 /** IMPORTAMOS RUTAS DE ARCHIVOS */
 import authRoutes from './routes/AuthRoutes'
+import Usuarios from './routes/privilegios/usuarios'
+import Roles from './routes/privilegios/roles'
 /*import subUnidad from './routes/privilegios/subUnidad'
 import Permisos from './routes/privilegios/permisos'
-import Roles from './routes/privilegios/roles'
 import De_permisos from './routes/privilegios/de_permisos'
-import Usuarios from './routes/privilegios/usuarios'
 import Form from './routes/project/form'
 import Preguntas from './routes/project/preguntas/pregunta'
 import Project from './routes/project/project'
@@ -45,9 +45,9 @@ app.use(cors());
 //app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/auth', authRoutes);
-/*app.use('/api/auth', Usuarios);
-app.use('/api', subUnidad);
+app.use('/api/auth', Usuarios);
 app.use('/api', Roles);
+/*app.use('/api', subUnidad);
 app.use('/api', Permisos);
 app.use('/api', De_permisos);
 app.use('/api', Form);

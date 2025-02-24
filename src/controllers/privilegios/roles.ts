@@ -6,14 +6,14 @@ const prisma = new PrismaClient();
 
 /*---------- CREAR UN NUEVO ROL DE PERMISOS ----------*/
 export const createRoleWithDePermisos = async (req: Request, res: Response): Promise<void> => {
-    const { n_rol, abrev } = req.body;
+    const { nombre, abreviatura } = req.body;
     
     try {
         // Paso 1: Crear el nuevo rol
         const newRole = await prisma.rol.create({
             data: {
-                n_rol,
-                abrev,
+                n_rol: nombre,
+                abrev: abreviatura,
             },
         });
         
@@ -103,7 +103,7 @@ export const getAllRoles = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
-export const getRoleswithDNI = async (req: Request, res: Response): Promise<void> => {
+/*export const getRoleswithDNI = async (req: Request, res: Response): Promise<void> => {
     
     try {
         const { dni } = req.params;
@@ -116,7 +116,7 @@ export const getRoleswithDNI = async (req: Request, res: Response): Promise<void
         console.error(error);
         res.status(500).json({ message: 'Error al obtener los roles' });
     }
-};
+};*/
 
 /*---------- ACTULIZAR ROL POR ID----------*/
 export const updateRol = async (req: Request, res: Response): Promise<void> => {

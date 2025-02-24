@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import { generarContrasenia } from '../../services/generate.service';
+
 // VALIDACIONES PARA EL USUARIO 
 // Función para validar el formato del email
 const isValidEmail = (email: string): boolean => {
@@ -21,36 +23,44 @@ export const ValidateRegisterInputUsuario = (req: Request, res: Response, next: 
     const { dni, email, nombre, aPaterno, aMaterno, password, idpe } = req.body;
 
     if (!dni) {
-        return res.status(400).json({ message: 'DNI es obligatorio' });
+        res.status(400).json({ message: 'DNI es obligatorio' });
+        return;
     }
     if (!isValidDni(dni)) {
-        return res.status(400).json({ message: 'El DNI debe tener 8 caracteres' });
+        res.status(400).json({ message: 'El DNI debe tener 8 caracteres' });
+        return;
     }
 
     if (!email) {
-        return res.status(400).json({ message: 'Email es obligatorio' });
+        res.status(400).json({ message: 'Email es obligatorio' });
+        return;
     }
     if (!isValidEmail(email)) {
-        return res.status(400).json({ message: 'El email no tiene un formato válido' });
+        res.status(400).json({ message: 'El email no tiene un formato válido' });
+        return;
     }
 
     if (!nombre) {
-        return res.status(400).json({ message: 'Nombre es obligatorio' });
+        res.status(400).json({ message: 'Nombre es obligatorio' });
+        return;
     }
 
     if (!aPaterno) {
-        return res.status(400).json({ message: 'Apellido paterno es obligatorio' });
+        res.status(400).json({ message: 'Apellido paterno es obligatorio' });
+        return;
     }
 
     if (!aMaterno) {
-        return res.status(400).json({ message: 'Apellido materno es obligatorio' });
+        res.status(400).json({ message: 'Apellido materno es obligatorio' });
+        return;
     }
 
-    if (!password) {
-        return res.status(400).json({ message: 'Password es obligatorio' });
+    if (!req.body.password) {
+        req.body.password = generarContrasenia(7);
     }
-    if (!isValidPassword(password)) {
-        return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+    if (!isValidPassword(req.body.password)) {
+        res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+        return 
     }
 
     // Si todo está bien, pasa al siguiente middleware
@@ -68,8 +78,45 @@ export const ValidateAsignateRolSubunidad = (req:Request, res:Response, next: Ne
         return;
     }
     if(!iddatausuario){
-        res.status(400).json({message: 'El usuario es obligatorio'});
+        res.status(400).json({ message: 'El usuario es obligatorio'});
         return;
     }
     next();
 }
+
+export const ValidateLoginInput = (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+
+    if (!email) {
+        res.status(400).json({ message: 'Usuario es obligatorio' });
+        return 
+    }
+
+    if (!password) {
+        res.status(400).json({ message: 'Contraseña es obligatoria' });
+        return 
+    }
+
+    next();
+};
+
+export const ValidateLoginUniqueInput = (req: Request, res: Response, next: NextFunction) => {
+    const { iddatausuario, idrol, idsubunidad } = req.body;
+
+    if (!iddatausuario) {
+        res.status(400).json({ message: 'Usuario es obligatorio' });
+        return 
+    }
+
+    if (!idrol) {
+        res.status(400).json({ message: 'El rol es obligatoria' });
+        return 
+    }
+
+    if (!idsubunidad) {
+        res.status(400).json({ message: 'La sub unidad es obligatoria' });
+        return 
+    }
+
+    next();
+};

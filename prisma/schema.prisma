@@ -77,6 +77,8 @@ model DatosUsuario {
   AMaterno              String
   password              String
   idpe                  Int?
+  lastFailedAttempt     DateTime? // Hora del último intento fallido
+  failedAttempts        Int @default(0) // Número de intentos fallidos
   deletedAt             DateTime? // Campo para soft delete
 
   createdAt             DateTime @default(now())
@@ -96,10 +98,10 @@ model Usuario {
 
   roles                 Rol           @relation(fields: [idrol], references: [id_rol])
   subunidad             Sub_unidad    @relation(fields: [idsubunidad], references: [id_subuni])
-  datausuario           DatosUsuario  @relation(fields: [iduser], references: [iddatauser])
+  datausuario           DatosUsuario  @relation(fields: [iddatauser], references: [iddatauser])
 
   project               Project[]
-  @@unique([idrol, idsubunidad, iddatauser])
+  @@unique([iddatauser, idrol, idsubunidad])
 }
 
 model Form {

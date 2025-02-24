@@ -1,13 +1,16 @@
-import { Request, Response } from "express";
-import {comparePasswords, hashPassword} from '../services/password.service' 
-import prisma from '../models/user';
-import { generateToken } from "../services/auth.service";
+import { Request, Response, NextFunction } from "express";
+import {comparePassword, hashPassword} from '../services/password.service' 
+import { PrismaClient } from "@prisma/client";
+import { generateToken, verifyToken} from "../services/auth.service";
+import {User} from "../models/interface/user.interface"
+
+const prisma = new PrismaClient();
 
 /* REGISTRO DEl SISTEMA */
 export const register = async (req: Request, res: Response): Promise<void> => {
     const {usuario, password} = req.body;
     try {
-        const existuser = await prisma.findUnique({
+        const existuser = await prisma.user.findUnique({
             where: {
                 usuario: usuario
             }
@@ -20,7 +23,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         }
         const hashedPassword = await hashPassword(password);
 
-        const user = await prisma.create(
+        const user = await prisma.user.create(
             {
                 data: {
                     usuario,
@@ -73,29 +76,29 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 /* LOGIN DEl SISTEMA */
 export const login = async(req: Request, res: Response): Promise<void> => {
-    const {usuario, password} = req.body;
+    const {email, password} = req.body;
     
     try {
 
-        const user = await prisma.findUnique({where: {usuario}})
+        const user = await prisma.user.findUnique({where: {usuario:email}})
         
         // Comprobamos si el usuario existe
         if(!user){
             res.status(404).json({error: 'Usuario incorrecto'});
             return;
         }
-         // Verificar si el usuario está bloqueado temporalmente
-         const blockDuration = 15 * 60 * 1000; // 15 minutos
-         if (user.failedAttempts >= 5 && user.lastFailedAttempt && 
-             (Date.now() - new Date(user.lastFailedAttempt).getTime()) < blockDuration) {
-             res.status(429).json({ message: 'Cuenta bloqueada temporalmente. Inténtalo de nuevo más tarde.' });
-             return;
-         }
+        // Verificar si el usuario está bloqueado temporalmente
+        const blockDuration = 15 * 60 * 1000; // 15 minutos
+        if (user.failedAttempts >= 5 && user.lastFailedAttempt && 
+            (Date.now() - new Date(user.lastFailedAttempt).getTime()) < blockDuration) {
+            res.status(429).json({ message: 'Cuenta bloqueada temporalmente. Inténtalo de nuevo más tarde.' });
+            return;
+        }
         // Comparamos las password
-        const passwordMatch = await comparePasswords(password, user.password);
+        const passwordMatch = await comparePassword(password, user.password);
         if(!passwordMatch){
             // Incrementar el contador de intentos fallidos
-            await prisma.update({
+            await prisma.user.update({
                 where: { id: user.id },
                 data: {
                     failedAttempts: user.failedAttempts + 1,
@@ -107,7 +110,7 @@ export const login = async(req: Request, res: Response): Promise<void> => {
             return;
         }
         // Restablecer el contador de intentos fallidos
-        await prisma.update({
+        await prisma.user.update({
             where: { id: user.id },
             data: {
                 failedAttempts: 0,
@@ -116,13 +119,37 @@ export const login = async(req: Request, res: Response): Promise<void> => {
         });
 
         const token = generateToken(user)
-        res.status(201).json({token})
+        res.status(201).json({message: 'Usuario logeado exitosamente.',admin: true, token})
         return;
         
     } catch (error: any) {
         console.log('Error: ' + error)
     }
 }
+
+export const Authenticate = async(req: Request, res: Response, next: NextFunction) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        res.status(401).json({ message: 'Acceso no autorizado' });
+        return;
+    }
+
+    try {
+        const decoded:Omit<User, "password"> = verifyToken(token);
+        const user = await prisma.user.findUnique({
+            where: {
+                usuario: decoded.usuario
+            }
+        });
+
+        req.user = user as User; // Adjunta el usuario decodificado a la solicitud
+
+        next();
+    } catch (error) {
+        res.status(401).json({ message: 'Token inválido o expirado' });
+    }
+};
 
 
 export const Me = async(req: Request, res: Response): Promise<void> => {
@@ -137,7 +164,7 @@ export const Me = async(req: Request, res: Response): Promise<void> => {
             return;
         }
         
-        const user = await prisma.findUnique({where: {usuario: req.user.usuario}, select : {usuario: true, id: true}});
+        const user = await prisma.user.findUnique({where: {usuario: req.user.usuario}, select : {usuario: true, id: true}});
         
         // Comprobamos si el usuario existe
         if(!user){

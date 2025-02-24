@@ -3,3 +3,11 @@ export interface User{
     usuario:  string,
     password: string
 }
+
+export interface Usuario {
+    iduser: Number,
+    idrol: Number,
+    idsubunidad: Number,
+    estado: boolean,
+    iddatauser: Number
+}
