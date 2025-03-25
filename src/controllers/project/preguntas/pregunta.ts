@@ -28,7 +28,7 @@ export const handleDynamicQuestions = async (req: Request, res: Response): Promi
     
     try {
         // Iterar sobre cada pregunta en el JSON
-        console.log(questions, "Preguntassdada");
+        //console.log(questions, "Preguntassdada");
         const form = await prisma.form.findFirst({
         where: {
             idf: Number(idf),

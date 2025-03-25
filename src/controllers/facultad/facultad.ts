@@ -18,9 +18,7 @@ export const createFacultad = async (req: Request, res: Response): Promise<void>
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al crear la facultad' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const getFacultades = async (req: Request, res: Response): Promise<void> => {
@@ -30,9 +28,7 @@ export const getFacultades = async (req: Request, res: Response): Promise<void> 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener las facultades' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const updateFacultad = async (req: Request, res: Response): Promise<void> => {
@@ -53,9 +49,7 @@ export const updateFacultad = async (req: Request, res: Response): Promise<void>
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al actualizar la facultad' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const deleteFacultad = async (req: Request, res: Response): Promise<void> => {
@@ -68,7 +62,5 @@ export const deleteFacultad = async (req: Request, res: Response): Promise<void>
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al eliminar la facultad' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };

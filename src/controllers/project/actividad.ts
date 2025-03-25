@@ -1094,7 +1094,7 @@ export const getDataActivities = async (req: Request, res: Response): Promise<vo
                 opcuni: true, // Opciones para singleChoice
             },
         });
-        console.log(preguntas, "preguntas");
+        //console.log(preguntas, "preguntas");
         // Formatear las preguntas
         const formattedPreguntas = preguntas.map((pregunta) => {
             const formattedPregunta: any = {

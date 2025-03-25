@@ -19,9 +19,7 @@ export const createPrgEstudio = async (req: Request, res: Response): Promise<voi
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al crear el programa de estudios' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const getPrgEstudios = async (req: Request, res: Response): Promise<void> => {
@@ -31,9 +29,7 @@ export const getPrgEstudios = async (req: Request, res: Response): Promise<void>
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener los programas de estudios' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const updatePrgEstudio = async (req: Request, res: Response): Promise<void> => {
@@ -55,9 +51,7 @@ export const updatePrgEstudio = async (req: Request, res: Response): Promise<voi
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al actualizar el programa de estudios' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };
 
 export const deletePrgEstudio = async (req: Request, res: Response): Promise<void> => {
@@ -70,7 +64,5 @@ export const deletePrgEstudio = async (req: Request, res: Response): Promise<voi
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al eliminar el programa de estudios' });
-    } finally {
-        await prisma.$disconnect();
-    }
+    } 
 };

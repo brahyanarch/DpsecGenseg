@@ -118,21 +118,28 @@ model Form {
   prg         Prg[]
   res         Res[]
 }
-
+enum Type {
+  TEXT
+  MULTIPLECHOICE
+  SINGLECHOICE
+  DROPDOWN
+  DATE
+  FILE
+  NUMBER
+}
 
 model Prg {
   idp       Int @id @default(autoincrement())
   nmPrg     String  
   idf       Int
-  type      String
-
+  type      Type
+  required  Boolean @default(false)
+  
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
   form      Form  @relation(fields: [idf], references: [idf])
-  opcmul    OpcMul[]
-  opcuni    OpcUni[]
-  opcdes    OpcDes[]
+  opcs      Opc[]
   resom     ResOM[]
   resou     ResOU[]
   resod     ResOD[]
@@ -162,29 +169,17 @@ model Res {
   actividad Actividad[]
 }
 
-model OpcMul {
-  idomul    Int @id @default(autoincrement())
+model Opc {
+  idOpc    Int @id @default(autoincrement())
   idp       Int
   txtOpc    String
+
   prg       Prg   @relation(fields: [idp], references: [idp])
   resom     ResOM[]
-}
-
-model OpcUni {
-  idoUni    Int   @id   @default(autoincrement())
-  idp       Int
-  txtOpc    String
-  prg       Prg   @relation(fields: [idp], references: [idp])
   resou     ResOU[]
-}
-
-model OpcDes {
-  idodes    Int   @id   @default(autoincrement())
-  idp       Int
-  txtOpc    String
-  prg       Prg     @relation(fields: [idp], references: [idp])
   resod     ResOD[]
 }
+
 
 model ResOM {
   idresom     Int   @id     @default(autoincrement())
@@ -193,17 +188,17 @@ model ResOM {
   idomul      Int
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
-  opcmul      OpcMul  @relation(fields: [idomul], references: [idomul])
+  opcs        Opc  @relation(fields: [idomul], references: [idOpc])
 }
 
 model ResOU {
   idresou     Int   @id     @default(autoincrement())
   idres       Int
   idp         Int
-  idou        Int
+  idop        Int
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
-  opcuni      OpcUni  @relation(fields: [idou], references: [idoUni])
+  opcuni      Opc  @relation(fields: [idop], references: [idOpc])
 }
 
 model ResOD {
@@ -213,7 +208,7 @@ model ResOD {
   idodes      Int
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
-  opcdes      OpcDes  @relation(fields: [idodes], references: [idodes])
+  opcdes      Opc  @relation(fields: [idodes], references: [idOpc])
 }
 
 model ResTxt {

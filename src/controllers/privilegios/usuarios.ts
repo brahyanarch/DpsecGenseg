@@ -9,7 +9,7 @@ import { hashPassword, comparePassword} from '../../services/password.service';
 import { generateTokenUsuario, verifyTokenUsuario} from '../../services/auth.service';
 import { enviarCorreo} from '../../services/email.service';
 import { login} from '../authController'
-import { Usuario } from "../../models/interface/user.interface";
+import { Usuario, DataUsuario } from "../../models/interface/user.interface";
 
 const prisma = new PrismaClient();
 dotenv.config();
@@ -222,6 +222,10 @@ export const AuthenticateUsuario = async(req: Request, res: Response, next: Next
           where: {
               iduser: Number(decoded.iduser),
               estado: true
+          },
+          include: {
+            subunidad: {select: { id_subuni: true, n_subuni: true}},
+            roles: {select: { id_rol:true, n_rol: true}}
           }
       });
       
@@ -238,7 +242,7 @@ export const AuthenticateUsuario = async(req: Request, res: Response, next: Next
   }
 };
 
-/*---------- OBTENER USUARIOS -------*/
+/*---------- OBTENER ROLES -------*/
 /*
 export const AllUser = async (req: Request, res: Response): Promise<void> => {
 
@@ -261,26 +265,37 @@ export const AllUser = async (req: Request, res: Response): Promise<void> => {
     console.error(error);
     res.status(500).json({ error: "Algo salió mal al obtener los usuarios." });
   }
-};
+};*/
 
-export const getUserwithDNI = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getAllRolesToUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { dni } = req.params;
-    const getRoles = await prisma.usuario.findFirst({
-      where: { dni: dni, estado: true },
+    if(!req.usuario){
+      res.status(401).json({message: 'Usuario no encontrado'});
+      return;
+    }
+    const usuario = req.usuario as Usuario;
+    console.log(usuario);
+    const roles = await prisma.usuario.findMany({
+      where: { iddatauser: Number(usuario.iddatauser), estado: true },
+      select: {
+        iduser: true,
+        roles: { select: { n_rol: true, id_rol: true } },
+        subunidad: { select: { n_subuni: true, id_subuni: true } },
+      },
     });
-
-    res.status(200).json(getRoles);
+    if(!roles){
+      res.status(404).json({message: 'No se asigno nigun rol en niguna sub unidad.'});
+      return;
+    }
+    res.status(200).json({ usuario, roles });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al obtener los roles" });
   }
 };
 
-
+/*---------- TOGGLE USER STATE -------*/
+/*
 export const toggleUserState = async (req: Request, res: Response): Promise<void> => {
   const { dni, rol_id, subunidad_id_subuni, estado } = req.body; // Desestructurar todos los campos necesarios.
 
@@ -352,13 +367,14 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
         AMaterno: true,
         idpe: true,
         prgest: {select: {nmPE: true, idpe: true}},
-      }
+      },
     });
     // Retornamos los usuarios con las relaciones
     if (!dataUser) {
       res.status(404).json({ message: 'Datos del usuario no encontrado', access: false });
       return;
     }
+    req.datausuario = dataUser as DataUsuario;
     res.status(200).json({usuario, dataUser, access: true});
 
   } catch (error) {
@@ -400,9 +416,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error("Error al actualizar el usuario:", error);
     res.status(500).json({ message: "Error interno del servidor." });
-  } finally {
-    await prisma.$disconnect();
-  }
+  } 
 };*/
 
 

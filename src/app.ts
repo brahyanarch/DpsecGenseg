@@ -11,11 +11,11 @@ const cors = require('cors')
 import authRoutes from './routes/AuthRoutes'
 import Usuarios from './routes/privilegios/usuarios'
 import Roles from './routes/privilegios/roles'
-/*import subUnidad from './routes/privilegios/subUnidad'
-import Permisos from './routes/privilegios/permisos'
-import De_permisos from './routes/privilegios/de_permisos'
+//import subUnidad from './routes/privilegios/subUnidad'
+//import Permisos from './routes/privilegios/permisos'
+//import De_permisos from './routes/privilegios/de_permisos'
 import Form from './routes/project/form'
-import Preguntas from './routes/project/preguntas/pregunta'
+/*import Preguntas from './routes/project/preguntas/pregunta'
 import Project from './routes/project/project'
 import Actividad from './routes/project/actividades'
 import Facultad from './routes/facultad/facultad'
@@ -47,11 +47,11 @@ app.use(cors());
 app.use('/auth', authRoutes);
 app.use('/api/auth', Usuarios);
 app.use('/api', Roles);
-/*app.use('/api', subUnidad);
-app.use('/api', Permisos);
-app.use('/api', De_permisos);
+//app.use('/api', subUnidad);
+//app.use('/api', Permisos);
+//app.use('/api', De_permisos);
 app.use('/api', Form);
-app.use('/api/form', Preguntas);
+/*app.use('/api/form', Preguntas);
 app.use('/api', Project);
 app.use('/api', Actividad);
 app.use('/api', Facultad);
