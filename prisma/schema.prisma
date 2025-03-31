@@ -96,6 +96,9 @@ model Usuario {
   idsubunidad           Int
   iddatauser            Int
 
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime  @updatedAt
+  
   roles                 Rol           @relation(fields: [idrol], references: [id_rol])
   subunidad             Sub_unidad    @relation(fields: [idsubunidad], references: [id_subuni])
   datausuario           DatosUsuario  @relation(fields: [iddatauser], references: [iddatauser])

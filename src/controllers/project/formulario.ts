@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
 import { PrismaClient, Type } from "@prisma/client";
-import { sub } from "date-fns";
+import {HoraLima} from "../../services/horaLima.service"
 //import {  } from "../../models/interface/user.interface";
 const prisma = new PrismaClient();
 
 
 export const createForm = async (req: Request, res: Response): Promise<void> => {
     const { name, preguntas } = req.body;
-    const date = new Date();
-    date.setHours(date.getHours() - 5);
-    console.log("preguntas, ", preguntas);
+    const date = HoraLima();
+    //console.log("preguntas, ", preguntas);
       try {
         const newForm = await prisma.form.create({
           data: {
@@ -401,8 +400,8 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
 export const updateQuestion = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { preguntas, name } = req.body;
-    console.log("id, ", req.body);
-    console.log("preguntas, ", req.body.preguntas);
+    //console.log("id, ", req.body);
+    //console.log("preguntas, ", req.body.preguntas);
 
     try {
         const form = await prisma.form.findUnique({

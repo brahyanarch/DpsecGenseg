@@ -8,6 +8,7 @@ import { emit } from "process";
 import { hashPassword, comparePassword} from '../../services/password.service';
 import { generateTokenUsuario, verifyTokenUsuario} from '../../services/auth.service';
 import { enviarCorreo} from '../../services/email.service';
+import { HoraLima} from '../../services/horaLima.service';
 import { login} from '../authController'
 import { Usuario, DataUsuario } from "../../models/interface/user.interface";
 
@@ -115,7 +116,7 @@ export const loginUniqueUser = async (req: Request, res: Response): Promise<void
 /*---------- CREAR USUARIO -------*/
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     const { dni, email, nombre, aPaterno, aMaterno, idpe } = req.body;
-
+  
   try {
     let programa = null;
     if (idpe) {
@@ -151,7 +152,9 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         APaterno: aPaterno,
         AMaterno: aMaterno,
         password: hashedPassword,
-        idpe: programa 
+        idpe: programa, 
+        createdAt: HoraLima(),
+        updatedAt: HoraLima()
       }
     });
     // Excluir la contraseña de la respuesta
@@ -191,7 +194,8 @@ export const AsignateRolSubunidad = async (req: Request, res:Response): Promise<
           iddatauser: Number(iddatausuario),
           idrol: Number(idrol),
           idsubunidad: Number(idsubunidad),
-
+          createdAt: HoraLima(),
+          updatedAt: HoraLima()
         }
       })
       
@@ -420,3 +424,54 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 };*/
 
 
+
+export const AllUserBySubUnidad = async (req: Request, res: Response): Promise<void> => {
+  const date = HoraLima();
+  console.log(date);
+  // verificar mediante el token si existe el usuario
+  if(!req.usuario){
+    res.status(400).json({message: "el usuario no a sido registrado"});
+    return;
+  }
+
+  try {
+    // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
+    const users = await prisma.usuario.findMany({
+      where: {
+        idsubunidad: Number(req.usuario.idsubunidad)
+      },
+      select: {
+        
+        iduser:true,
+        datausuario: {
+          select: {
+            APaterno: true,
+            AMaterno: true,
+            nombre: true,
+            dni: true,
+            iddatauser: true,
+
+          }
+        },
+        iddatauser: false,
+        estado: true,
+
+        roles: { select: { n_rol: true, id_rol: true } },
+        subunidad: { select: { n_subuni: true, id_subuni: true } },
+        createdAt: true,
+        updatedAt: true,  
+      },
+
+      orderBy: {
+        iduser: "asc"
+      }
+    });
+
+    // Retornamos los usuarios con las relaciones
+    res.json({users:users});
+  } catch (error) {
+    // Si hay un error, lo manejamos
+    console.error(error);
+    res.status(500).json({ error: "Algo salió mal al obtener los usuarios." });
+  }
+};
