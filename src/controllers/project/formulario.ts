@@ -137,6 +137,69 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
       }
 };
 
+export const copyForm = async (req: Request, res: Response): Promise<void> => {
+    const originalFormId = Number(req.params.id);
+    const { newName } = req.body; // Nombre nuevo opcional
+    const date = HoraLima();
+    
+    try {
+        // 1. Obtener el formulario original con sus preguntas y opciones
+        const originalForm = await prisma.form.findUnique({
+            where: { idf: originalFormId },
+            include: {
+                prg: {
+                    include: {
+                        opcs: true
+                    }
+                }
+            }
+        });
+
+        if (!originalForm) {
+            res.status(404).json({ error: "Formulario original no encontrado" });
+            return;
+        }
+        // 2. Crear el nuevo formulario
+        const copiedForm = await prisma.form.create({
+            data: {
+                idsubuni: originalForm.idsubuni,
+                nmForm: newName || `Copia de ${originalForm.nmForm}`,
+                abre: (newName?.substring(0, 3) || originalForm.nmForm.substring(0, 3) + date.getFullYear() + '-' + originalForm.idsubuni),
+                updatedAt: date,
+                createdAt: date,
+            },
+        });
+
+        // 3. Copiar todas las preguntas y opciones
+        for (const originalQuestion of originalForm.prg) {
+            // Crear nueva pregunta
+            const newQuestion = await prisma.prg.create({
+                data: {
+                    idf: copiedForm.idf,
+                    nmPrg: originalQuestion.nmPrg,
+                    type: originalQuestion.type,
+                }
+            });
+
+            // Copiar opciones si las tiene
+            if (originalQuestion.opcs.length > 0) {
+                await prisma.opc.createMany({
+                    data: originalQuestion.opcs.map(opcion => ({
+                        idp: newQuestion.idp,
+                        txtOpc: opcion.txtOpc
+                    }))
+                });
+            }
+        }
+
+        res.status(201).json(copiedForm);
+
+    } catch (error) {
+        console.error("Error copiando formulario:", error);
+        res.status(500).json({ error: "Error interno del servidor." });
+    }
+};
+
 export const getAllForms = async (req: Request, res: Response): Promise<void> => {
     try{
             // Consultamos todas los formularios en la base de datos
@@ -164,8 +227,9 @@ export const getAllForms = async (req: Request, res: Response): Promise<void> =>
 }
 
 export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promise<void> => {
-
+    
     try{
+        console.log("paso aqui");
         // Consultamos todas las subunidades en la base de datos
         const forms = await prisma.form.findMany(
             {
@@ -185,7 +249,8 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
             }
         );
             // Enviamos las subunidades encontradas
-            res.status(200).json(forms);
+            console.log(forms, "forms", req.usuario, "usuario");
+            res.status(200).json({forms: forms});
             return;
         } catch (error: any) {
             console.error(error);
@@ -199,41 +264,42 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
 }
 
 export const deleteForm = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta
-    console.log(id);
+    const { id } = req.params;
+    const idf = Number(id);
+
     try {
-        // Validar que se proporciona el ID
-        if (!id) {
-            res.status(400).json({ message: 'El ID del Formulario es obligatorio' });
+        if (!idf) {
+            res.status(400).json({ message: 'ID requerido' }); // Agregar return
+            return;
         }
-        // Convertir el ID a número (si es necesario)
-        const formId = parseInt(id);
 
-        // Verificar que el registro existe
+        // Verificar existencia
         const existingForm = await prisma.form.findUnique({
-            where: { idf: formId },
-        });
+            where: { idf },
+            include: { prg: true } // Incluir relaciones
+        }); 
 
-        // Manejo si `existingSubUnidad` es null
         if (!existingForm) {
-            res.status(404).json({ message: 'Formulario no encontrada' });
+            res.status(404).json({ message: 'Formulario no encontrado' }); // Agregar return
+            return;
         }
+        
+        // Eliminar en cascada
+        /*await prisma.$transaction([
+            prisma.res.deleteMany({ where: { idf } }),
+            prisma.prg.deleteMany({ where: { idf } }),
+            prisma.form.delete({ where: { idf } })
+        ]);*/   
 
-        // Eliminar la subunidad
-        await prisma.form.delete({
-            where: { idf: formId },
-        });
-
-        // Enviar respuesta exitosa
-        res.status(200).json({ message: 'Formulario eliminada con éxito' });
+        res.status(200).json({ message: 'Formulario eliminado correctamente' });
     } catch (error: any) {
         console.error(error);
         res.status(500).json({
-            message: 'Hubo un error al eliminar el formulario',
-            error: error.message,
+            message: 'Error al eliminar formulario',
+            error: error.message
         });
     }
-}
+};
 
 export const updateForm = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params; // Asumimos que el ID viene en los parámetros de la ruta

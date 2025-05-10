@@ -332,7 +332,7 @@ model Project {
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
-  dni                   String
+  dnic                   String
   id_rol                Int
   subunidad_id_subuni   Int
   iduser                Int

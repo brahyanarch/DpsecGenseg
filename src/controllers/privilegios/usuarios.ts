@@ -214,7 +214,9 @@ export const AsignateRolSubunidad = async (req: Request, res:Response): Promise<
 
 export const AuthenticateUsuario = async(req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
-
+  console.log(token, "token");
+  //console.log(req.headers, "cabezera");
+  
   if (!token) {
       res.status(401).json({ message: 'Acceso no autorizado' });
       return;
@@ -237,6 +239,7 @@ export const AuthenticateUsuario = async(req: Request, res: Response, next: Next
           res.status(401).json({ message: 'Usuario no encontrado' });
           return;
       }
+      console.log(usuario, "usuario");
       req.usuario = usuario as Usuario; // Adjunta el usuario decodificado a la solicitud
 
       next();
@@ -427,7 +430,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 
 export const AllUserBySubUnidad = async (req: Request, res: Response): Promise<void> => {
   const date = HoraLima();
-  console.log(date);
+  console.log(date, "traendo la data de ususarios");
   // verificar mediante el token si existe el usuario
   if(!req.usuario){
     res.status(400).json({message: "el usuario no a sido registrado"});

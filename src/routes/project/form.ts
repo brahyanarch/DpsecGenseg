@@ -1,17 +1,17 @@
 import express from 'express'
-import {updateEstado, createForm, getAllFormsBySubUnidad, getQuestionsByForm, updateQuestion, deleteForm, getAllForms, updateForm } from '../../controllers/project/formulario';
+import {updateEstado, createForm, getAllFormsBySubUnidad, getQuestionsByForm, updateQuestion, deleteForm, copyForm, updateForm } from '../../controllers/project/formulario';
 import {AuthenticateUsuario} from '../../controllers/privilegios/usuarios';
 import { ValidateInputForm, ValidateToggleForm, ValidateQuestionsForm} from '../../middlewares/project/validateInputForm';
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
 router.post('/form', AuthenticateUsuario, ValidateInputForm, ValidateQuestionsForm, createForm);
-//router.get('/form', getAllForms);
 router.get('/form', AuthenticateUsuario, getAllFormsBySubUnidad);
+router.post('/form/:id/copy', AuthenticateUsuario, copyForm);
 router.get('/form/preguntas/:id', AuthenticateUsuario, getQuestionsByForm);
 router.put('/form/preguntas/:id', AuthenticateUsuario, updateQuestion);
 router.put('/form/toggle/:id', AuthenticateUsuario, ValidateToggleForm, updateEstado);
 //router.put('/form/:id', updateForm);
-router.delete('/form/:id', deleteForm);
+router.delete('/form/:id', AuthenticateUsuario, deleteForm);
 
 export default router;
