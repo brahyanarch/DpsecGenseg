@@ -34,7 +34,7 @@ model Rol {
   datellePermisos   DetallePermiso[]
   usuarios          Usuario[]
 }
-
+// TABLA DE PERMISOS
 model Permiso {
   id_per            Int     @id     @default(autoincrement())
   n_per             String  @unique
@@ -45,7 +45,7 @@ model Permiso {
 
   datellePermisos    DetallePermiso[]
 }
-
+// TABLA AUXILIAR
 model DetallePermiso {
   id_dper           Int     @id     @default(autoincrement())
   id_rol            Int 
@@ -54,7 +54,7 @@ model DetallePermiso {
   permisos  Permiso @relation(fields: [id_per], references: [id_per])
   roles     Rol @relation(fields: [id_rol], references: [id_rol])
 }
-
+// TABLA DE SUB UNIDAD
 model Sub_unidad {
   id_subuni Int @id @default(autoincrement())
   n_subuni  String  @unique
@@ -67,7 +67,7 @@ model Sub_unidad {
   form         Form[]
   plantillas   Plantilla[]
 }
-
+// TABLA DE DATOS DEL USUARIO
 model DatosUsuario {
   iddatauser            Int     @id @default(autoincrement())
   dni                   String  @db.Char(8) @unique
@@ -80,6 +80,7 @@ model DatosUsuario {
   lastFailedAttempt     DateTime? // Hora del último intento fallido
   failedAttempts        Int @default(0) // Número de intentos fallidos
   deletedAt             DateTime? // Campo para soft delete
+  softDeleted           Boolean @default(false)
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime  @updatedAt
@@ -87,7 +88,7 @@ model DatosUsuario {
   usuario               Usuario[]
   prgest                PrgEstudio?  @relation(fields: [idpe], references: [idpe])
 }
-
+// USUARIO CON UN ROL EN UNA SUB UNIDAD
 model Usuario {
   iduser                Int     @id @default(autoincrement())
   estado                Boolean @default(true)
@@ -106,7 +107,7 @@ model Usuario {
   project               Project[]
   @@unique([iddatauser, idrol, idsubunidad])
 }
-
+// FORM DINAMICO PARA UNA ACTIVIDAD
 model Form {
   idf         Int @id @default(autoincrement())
   nmForm      String  
@@ -121,6 +122,7 @@ model Form {
   prg         Prg[]
   res         Res[]
 }
+// TIPOS DE DATOS ACEPTADOS PARA CREAR UNA PREGUNTA QUE PERTENECE A UN FORM
 enum Type {
   TEXT
   MULTIPLECHOICE
@@ -130,7 +132,7 @@ enum Type {
   FILE
   NUMBER
 }
-
+// TABLA DE PREGUNTAS
 model Prg {
   idp       Int @id @default(autoincrement())
   nmPrg     String  
@@ -151,7 +153,7 @@ model Prg {
   resdate   ResDate[]
   resnum    ResNum[]
 }
-
+// RESPUESTAS
 model Res {
   idres     Int @id @default(autoincrement())
   date      DateTime  @default(now())
@@ -171,7 +173,7 @@ model Res {
 
   actividad Actividad[]
 }
-
+// TABLA DE OPCIONES
 model Opc {
   idOpc    Int @id @default(autoincrement())
   idp       Int
@@ -182,8 +184,7 @@ model Opc {
   resou     ResOU[]
   resod     ResOD[]
 }
-
-
+// TABLA DE RESPUESTAS DE TIPO OPCION MULTIPLE
 model ResOM {
   idresom     Int   @id     @default(autoincrement())
   idres       Int
@@ -193,7 +194,7 @@ model ResOM {
   prg         Prg     @relation(fields: [idp], references: [idp])
   opcs        Opc  @relation(fields: [idomul], references: [idOpc])
 }
-
+// TABLA DE RESPUESTAS DE TIPO OPCION UNICA
 model ResOU {
   idresou     Int   @id     @default(autoincrement())
   idres       Int
@@ -203,7 +204,7 @@ model ResOU {
   prg         Prg     @relation(fields: [idp], references: [idp])
   opcuni      Opc  @relation(fields: [idop], references: [idOpc])
 }
-
+// TABLA DE RESPUESTAS DE TIPO OPCION DESPLEGABLE
 model ResOD {
   idresod     Int   @id     @default(autoincrement())
   idres       Int
@@ -213,7 +214,7 @@ model ResOD {
   prg         Prg     @relation(fields: [idp], references: [idp])
   opcdes      Opc  @relation(fields: [idodes], references: [idOpc])
 }
-
+// TABLA DE RESPUESTAS DE TIPO TEXTO
 model ResTxt {
   idrestxt    Int   @id   @default(autoincrement())
   idp         Int
@@ -222,7 +223,7 @@ model ResTxt {
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
-
+// TABLA DE RESPUESTAS DE TIPO ARCHIVO
 model ResFile {
   idresfile   Int   @id   @default(autoincrement())
   idres       Int
@@ -231,7 +232,7 @@ model ResFile {
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
-
+// TABLA DE RESPUESTAS DE TIPO FECHA
 model ResDate {
   idresdate   Int   @id   @default(autoincrement())
   idres       Int
@@ -240,7 +241,7 @@ model ResDate {
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
-
+// TABLA DE RESPUESTAS DE TIPO NUMERICO
 model ResNum {
   idresnum    Int   @id   @default(autoincrement())
   idres       Int
@@ -249,8 +250,7 @@ model ResNum {
   res         Res     @relation(fields: [idres], references: [idres])
   prg         Prg     @relation(fields: [idp], references: [idp])
 }
-
-
+// TABLA DE FACULTAD
 model Facu {
   idfacu    Int @id @default(autoincrement())
   nmFacu    String
@@ -261,7 +261,7 @@ model Facu {
 
   escuelas  Escuela[]
 }
-
+// TABLA DE UNA ESCUELA PROFESIONAL 
 model Escuela {
   idesc     Int @id @default(autoincrement())
   nmEsc     String
@@ -274,7 +274,7 @@ model Escuela {
   facu      Facu @relation(fields: [idfacu], references: [idfacu])
   prgest    PrgEstudio[]
 }
-
+// TABLA DE PROGRAMA DE ESTUDIO
 model PrgEstudio {
   idpe      Int @id @default(autoincrement())
   nmPE      String
@@ -289,7 +289,7 @@ model PrgEstudio {
   estudiante Estudiante[]
   DatosUsuario DatosUsuario[]
 }
-
+// TABLA ESTUDIANTE
 model Estudiante {
   idest     Int     @id @default(autoincrement())
   dni       String  
@@ -319,7 +319,7 @@ enum TipoProyecto {
   SUBUNIDAD
   PROGRAMAESTUDIO
 }
-
+// TABLA PROYECTO
 model Project {
   idproj                Int     @id   @default(autoincrement())
   plan                  String  
@@ -340,7 +340,7 @@ model Project {
   usuario               Usuario @relation(fields: [iduser], references: [iduser])  
   actividad             Actividad[]
 }
-
+// TABLA ACTIVIDAD
 model Actividad {
   idActivi              Int     @id   @default(autoincrement())
   name                  String  @unique
@@ -446,7 +446,7 @@ model Externo {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
-
+// TABLA PARA EL CONTENIDO DE LA PAGINA PRINCIPAL NO DE LA INTRANET PARA EL CARRUSEL DINAMICO Y LOS ANUNCIOS TIPO POPUP 
 model Carrusel {
   idcarrusel    Int @id @default(autoincrement())
   img           String

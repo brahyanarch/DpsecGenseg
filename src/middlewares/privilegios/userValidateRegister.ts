@@ -57,6 +57,7 @@ export const ValidateRegisterInputUsuario = (req: Request, res: Response, next: 
 
     if (!req.body.password) {
         req.body.password = generarContrasenia(7);
+        req.body.generated = true; // Indica que la contraseña fue generada automáticamente
     }
     if (!isValidPassword(req.body.password)) {
         res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
@@ -120,3 +121,4 @@ export const ValidateLoginUniqueInput = (req: Request, res: Response, next: Next
 
     next();
 };
+

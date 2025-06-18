@@ -679,4 +679,4 @@ export const getActivitiesAll = async (req: Request, res: Response): Promise<voi
         console.error("Error al obtener actividades:", error);
         res.status(500).json({ message: "Error interno del servidor" });
     }
-};
+};*/

@@ -1,29 +1,63 @@
-import nodemailer from 'nodemailer';
+import * as brevo from "@getbrevo/brevo";
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // O tu proveedor de correo
-  auth: {
-    user: 'brahyanarch@gmail.com',
-    pass: 'A8kCOpQF',
-  },
-});
+const apiInstance = new brevo.TransactionalEmailsApi();
 
-export async function enviarCorreo(destinatario: string, contraseña: string): Promise<void> {
-  const enlaceCambio = 'http://localhost:3005/auth/cambiar-contrasena';
-  const mensaje = `Hola,\n\nTu contraseña por defecto es: ${contraseña}\n\nPor favor, cambia tu contraseña siguiendo este enlace: ${enlaceCambio}`;
+apiInstance.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY!
+);
 
-  const mailOptions = {
-    from: 'brahyanarch@gmail.com',
-    to: destinatario,
-    subject: 'Datos de tu cuenta en GENSEG',
-    text: mensaje,
-  };
+export async function sendEmail() {
+  const smtpEmail = new brevo.SendSmtpEmail();
+  smtpEmail.subject = "Hello, World!";
+  smtpEmail.to = [{ email: "davidlarotapilco@gmail.com", name: "Jose Perez" }];
+  smtpEmail.htmlContent = "<html><body><h1>Hello, World !</h1></body></html>";
+  smtpEmail.sender = { name: "David brahyanS", email: "brahyanarch@gmail.com" };
 
-  transporter.sendMail(mailOptions, (error: any, info: any) => {
-    if (error) {
-        console.log('Error al enviar el correo:', error);
-    } else {
-        console.log('Correo enviado:', info.response);
-    }
-});
+  await apiInstance.sendTransacEmail(smtpEmail);
 }
+
+
+class EmailService {
+  private apiInstance: brevo.TransactionalEmailsApi;
+  private defaultSender: { name: string; email: string };
+
+  constructor(apiKey: string, defaultSender: { name: string; email: string }) {
+    this.apiInstance = new brevo.TransactionalEmailsApi();
+    this.apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+    this.defaultSender = defaultSender;
+  }
+
+  async sendEmail(options: {
+    subject: string;
+    to: { email: string; name?: string }[];
+    htmlContent: string;
+    sender?: { email: string; name?: string };
+  }): Promise<void> {
+    const smtpEmail = new brevo.SendSmtpEmail();
+    
+    smtpEmail.subject = options.subject;
+    smtpEmail.to = options.to;
+    smtpEmail.htmlContent = options.htmlContent;
+    smtpEmail.sender = options.sender || this.defaultSender;
+
+    try {
+      await this.apiInstance.sendTransacEmail(smtpEmail);
+      console.log(`Email sent to ${options.to.map(r => r.email).join(', ')}`);
+    } catch (error) {
+      console.error('Email sending failed:', error);
+      throw new Error('Failed to send email');
+    }
+  }
+}
+
+
+const emailServiceDavid = new EmailService(
+  process.env.BREVO_API_KEY!, // API Key desde variables de entorno
+  { 
+    name: "David Brahyan Larota Pilco", 
+    email: "brahyanarch@gmail.com" 
+  }
+);
+
+export default emailServiceDavid;
