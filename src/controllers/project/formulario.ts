@@ -10,10 +10,10 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
     const date = HoraLima();
     //console.log("preguntas, ", preguntas);
       try {
-        const newForm = await prisma.form.create({
+        const newForm = await prisma.plantillaDoc.create({
           data: {
             idsubuni: Number(req.usuario?.idsubunidad),
-            nmForm:name,
+            nombre:name,
             abre: name.substring(0, 3) + date.getFullYear() +'-'+ req.usuario?.idsubunidad,
             updatedAt: date,
             createdAt: date,
@@ -23,26 +23,26 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
           res.status(400).json({ error: "Error al crear formulario." });
           return;
         }
-        const idf = newForm.idf;
+        const idPdoc = Number(newForm.idPdoc);
         // crear las preguntas para ese formulario que biene de questions son de varios tipos dependiendo del tipo se guarda en una base de datps diferente
         for (const pregunta of preguntas) {
             const { type, text, options } = pregunta;
             // Identificar el tipo de pregunta y guardarla en la tabla correspondiente
             if (type === Type.TEXT) {
                 // Insertar pregunta de texto
-                await prisma.prg.create({
+                await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
             } else if (type === Type.MULTIPLECHOICE) {
                 // Insertar pregunta de opción múltiple
-                const newQuestion = await prisma.prg.create({
+                const newQuestion = await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
@@ -51,17 +51,17 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
                 if (options && options.length > 0) {
                     await prisma.opc.createMany({
                         data: options.map((opcion: string) => ({
-                            idp: newQuestion.idp,
+                            idp: newQuestion.idPdoc,
                             txtOpc: opcion,
                         })),
                     });
                 }
             }else if (type === Type.SINGLECHOICE) {
                 // Insertar pregunta de opción single -> simple
-                const newQuestion = await prisma.prg.create({
+                const newQuestion = await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
@@ -70,17 +70,17 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
                 if (options && options.length > 0) {
                     await prisma.opc.createMany({
                         data: options.map((opcion: string) => ({
-                            idp: newQuestion.idp,
+                            idp: newQuestion.idPdoc,
                             txtOpc: opcion,
                         })),
                     });
                 }
             }else if (type === Type.DROPDOWN) {
                 // Insertar pregunta de opción dropdown -> desplegable
-                const newQuestion = await prisma.prg.create({
+                const newQuestion = await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
@@ -89,36 +89,36 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
                 if (options && options.length > 0) {
                     await prisma.opc.createMany({
                         data: options.map((opcion: string) => ({
-                            idp: newQuestion.idp,
+                            idp: newQuestion.idPdoc,
                             txtOpc: opcion,
                         })),
                     });
                 }
             }else if (type === Type.DATE) {
                 // Insertar pregunta de tipo date
-                await prisma.prg.create({
+                await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
 
             }else if (type === Type.FILE) {
                 // Insertar pregunta de tipo archive
-                await prisma.prg.create({
+                await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
             }else if (type === Type.NUMBER) {
                 // Insertar pregunta de tipo archive
-                await prisma.prg.create({
+                await prisma.campos.create({
                     data: {
-                        idf: Number(idf),
-                        nmPrg: text,
+                        idPdoc: idPdoc,
+                        nmCampo: text,
                         type: type,
                     },
                 });
@@ -138,16 +138,16 @@ export const createForm = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const copyForm = async (req: Request, res: Response): Promise<void> => {
-    const originalFormId = Number(req.params.id);
+    const originalIdPlantillaDoc = Number(req.params.id);
     const { newName } = req.body; // Nombre nuevo opcional
     const date = HoraLima();
     
     try {
         // 1. Obtener el formulario original con sus preguntas y opciones
-        const originalForm = await prisma.form.findUnique({
-            where: { idf: originalFormId },
+        const originalPD = await prisma.plantillaDoc.findUnique({
+            where: { idPdoc: originalIdPlantillaDoc },
             include: {
-                prg: {
+                campos: {
                     include: {
                         opcs: true
                     }
@@ -155,28 +155,28 @@ export const copyForm = async (req: Request, res: Response): Promise<void> => {
             }
         });
 
-        if (!originalForm) {
+        if (!originalPD) {
             res.status(404).json({ error: "Formulario original no encontrado" });
             return;
         }
         // 2. Crear el nuevo formulario
-        const copiedForm = await prisma.form.create({
+        const copiedPD = await prisma.plantillaDoc.create({
             data: {
-                idsubuni: originalForm.idsubuni,
-                nmForm: newName || `Copia de ${originalForm.nmForm}`,
-                abre: (newName?.substring(0, 3) || originalForm.nmForm.substring(0, 3) + date.getFullYear() + '-' + originalForm.idsubuni),
+                idsubuni: originalPD.idsubuni,
+                nombre: newName || `Copia de ${originalPD.nombre}`,
+                abre: (newName?.substring(0, 3) || originalPD.nombre.substring(0, 3) + date.getFullYear() + '-' + originalPD.idsubuni),
                 updatedAt: date,
                 createdAt: date,
             },
         });
 
         // 3. Copiar todas las preguntas y opciones
-        for (const originalQuestion of originalForm.prg) {
+        for (const originalQuestion of originalPD.campos) {
             // Crear nueva pregunta
-            const newQuestion = await prisma.prg.create({
+            const newQuestion = await prisma.campos.create({
                 data: {
-                    idf: copiedForm.idf,
-                    nmPrg: originalQuestion.nmPrg,
+                    idPdoc: copiedPD.idPdoc,
+                    nmCampo: originalQuestion.nmCampo,
                     type: originalQuestion.type,
                 }
             });
@@ -185,14 +185,14 @@ export const copyForm = async (req: Request, res: Response): Promise<void> => {
             if (originalQuestion.opcs.length > 0) {
                 await prisma.opc.createMany({
                     data: originalQuestion.opcs.map(opcion => ({
-                        idp: newQuestion.idp,
+                        idCam: newQuestion.idPdoc,
                         txtOpc: opcion.txtOpc
                     }))
                 });
             }
         }
 
-        res.status(201).json(copiedForm);
+        res.status(201).json(copiedPD);
 
     } catch (error) {
         console.error("Error copiando formulario:", error);
@@ -203,7 +203,7 @@ export const copyForm = async (req: Request, res: Response): Promise<void> => {
 export const getAllForms = async (req: Request, res: Response): Promise<void> => {
     try{
             // Consultamos todas los formularios en la base de datos
-            const forms = await prisma.form.findMany();
+            const forms = await prisma.plantillaDoc.findMany();
 
             // Si no hay subunidades, devolvemos un mensaje
             if (!forms || forms.length === 0) {
@@ -231,21 +231,21 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
     try{
         console.log("paso aqui");
         // Consultamos todas las subunidades en la base de datos
-        const forms = await prisma.form.findMany(
+        const forms = await prisma.plantillaDoc.findMany(
             {
                 where: {
                     idsubuni: Number(req.usuario?.idsubunidad),
                 },
                 select: {
-                    idf: true,
-                    nmForm: true,
+                    idPdoc: true,
+                    nombre: true,
                     abre: true,
                     estado: true,
                     createdAt: true,
                     updatedAt: true,
                     idsubuni: false,
                 },
-                orderBy: {idf: 'asc'},
+                orderBy: {idPdoc: 'desc'},
             }
         );
             // Enviamos las subunidades encontradas
@@ -265,18 +265,18 @@ export const getAllFormsBySubUnidad = async (req: Request, res: Response): Promi
 
 export const deleteForm = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const idf = Number(id);
+    const idPdoc = Number(id);
 
     try {
-        if (!idf) {
+        if (!idPdoc) {
             res.status(400).json({ message: 'ID requerido' }); // Agregar return
             return;
         }
 
         // Verificar existencia
-        const existingForm = await prisma.form.findUnique({
-            where: { idf },
-            include: { prg: true } // Incluir relaciones
+        const existingForm = await prisma.plantillaDoc.findUnique({
+            where: { idPdoc: idPdoc },
+            include: { campos: true } // Incluir relaciones
         }); 
 
         if (!existingForm) {
@@ -317,23 +317,22 @@ export const updateForm = async (req: Request, res: Response): Promise<void> => 
         }
 
         // Convertir el ID a número (si es necesario)
-        const formId = Number(id);
+        const idPdoc = Number(id);
 
         // Verificar que el registro existe
-        const existingForm = await prisma.form.findUnique({
-            where: { idf: formId },
+        const existingForm = await prisma.plantillaDoc.findUnique({
+            where: { idPdoc: idPdoc },
         });
 
         if (!existingForm) {
             res.status(404).json({ message: 'Formulario no encontrado' });
         }
-        const date = new Date();
-        date.setHours(date.getHours() - 5);
+        const date = HoraLima();
         // Actualizar la subunidad
-        const updatedSubUnidad = await prisma.form.update({
-            where: { idf: formId },
+        const updatedSubUnidad = await prisma.plantillaDoc.update({
+            where: { idPdoc: idPdoc },
             data: {
-                nmForm: name,
+                nombre: name,
                 abre: abrev,
                 updatedAt: date,
             },
@@ -357,7 +356,7 @@ export const updateEstado = async (req: Request, res: Response): Promise<void> =
 
     try {
         //if (id) throw new Error('Error de prueba');
-        const formId = Number(id);
+        const idPdoc = Number(id);
         
         // Validar si el estado es un booleano
         if (typeof estado !== "boolean") {
@@ -367,21 +366,21 @@ export const updateEstado = async (req: Request, res: Response): Promise<void> =
         //throw new Error('Error de prueba');
         // Si el nuevo estado es "true", desactivar otros formularios activos
         if (estado === true) {
-            const formOld = await prisma.form.findFirst({
+            const formOld = await prisma.plantillaDoc.findFirst({
                 where: { estado: true, idsubuni: Number(req.usuario?.idsubunidad) },
             });
 
             if (formOld) {
-                await prisma.form.update({
-                    where: { idf: formOld?.idf },
+                await prisma.plantillaDoc.update({
+                    where: { idPdoc: formOld?.idPdoc },
                     data: { estado: false },
                 });
             }
         }
 
         // Actualizar el estado del formulario especificado
-        await prisma.form.update({
-            where: { idf: formId },
+        await prisma.plantillaDoc.update({
+            where: { idPdoc: idPdoc },
             data: { estado: estado }, // 👈 Usamos el valor recibido
         });
 
@@ -401,22 +400,22 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
     const { id } = req.params;
 
     try {
-        const form = await prisma.form.findUnique({
-            where: { idf: Number(id) },
+        const form = await prisma.plantillaDoc.findUnique({
+            where: { idPdoc: Number(id) },
         });
         if (!form) {
             res.status(404).json({ message: 'Formulario no encontrado' });
             return;
         }
-        const questions = await prisma.prg.findMany({
-            where: { idf: form.idf },
+        const questions = await prisma.campos.findMany({
+            where: { idPdoc: form.idPdoc },
             select: {
-                idf:false,
-                idp:true,
-                nmPrg: true,
+                idPdoc:false,
+                idca:true,
+                nmCampo: true,
                 type:true,
                 required: false,
-                form:false,
+                PlantillaDoc:false,
                 opcs: {
                     select: {
                         idOpc: true,
@@ -428,13 +427,13 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
                 updatedAt: false,
             },
             orderBy: {
-                idp: 'asc' // Ordenar por ID de pregunta
+                idca: 'asc' // Ordenar por ID de pregunta
             }
         });
         console.log(questions);
         // Transformar las preguntas en un formato unificado
         const formattedQuestions = questions.map((question) => {
-            const { idp, type, nmPrg, opcs } = question;
+            const { idca, type, nmCampo, opcs } = question;
             
             // Crear el objeto de opciones según el tipo de pregunta
             const options = {
@@ -445,14 +444,14 @@ export const getQuestionsByForm = async (req: Request, res: Response): Promise<v
             };
 
             return {
-                id: idp,
+                id: idca,
                 type: type as Type, // Usar el enum Type
-                questionText: nmPrg,
+                questionText: nmCampo,
                 options: options
             };
         });
 
-        res.status(200).json({preguntas:questions, name: form.nmForm});
+        res.status(200).json({preguntas:questions, name: form.nombre});
     } catch (error: any) {
         console.error(error);
         res.status(500).json({ 
@@ -470,23 +469,23 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
     //console.log("preguntas, ", req.body.preguntas);
 
     try {
-        const form = await prisma.form.findUnique({
-            where: { idf: Number(id)}
+        const form = await prisma.plantillaDoc.findUnique({
+            where: { idPdoc: Number(id)}
         });
         if(!form){
             res.status(400).json({ message: 'formulario no encontrado' });
             return;
         }
-        if(form.nmForm !== name){
-            await prisma.form.update({
-                where: {idf: Number(id)},
+        if(form.nombre !== name){
+            await prisma.plantillaDoc.update({
+                where: {idPdoc: Number(id)},
                 data:{
-                    nmForm: name,
+                    nombre: name,
                 }
             })
         }
-        const existingQuestions = await prisma.prg.findMany({
-            where:{idf: Number(id)}
+        const existingQuestions = await prisma.campos.findMany({
+            where:{idPdoc: Number(id)}
         })
         if(!existingQuestions){
             res.status(400).json({ message: 'No hay preguntas' });
@@ -506,10 +505,10 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
 
             if (isNewQuestion) {
                 // Crear nueva pregunta
-                await prisma.prg.create({
+                await prisma.campos.create({
                     data: {
-                        idf: Number(id),
-                        nmPrg: pregunta.nmPrg,
+                        idPdoc: Number(id),
+                        nmCampo: pregunta.nmPrg,
                         type: pregunta.type,
                         opcs: {
                             create: pregunta.opcs.map((opc: any) => ({
@@ -521,10 +520,10 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
                 });
             } else {
                 // Actualizar pregunta existente
-                await prisma.prg.update({
-                    where: { idp: Number(pregunta.idp) },
+                await prisma.campos.update({
+                    where: { idca: Number(pregunta.idp) },
                     data: {
-                        nmPrg: pregunta.nmPrg,
+                        nmCampo: pregunta.nmPrg,
                         type: pregunta.type,
                         // Actualizar opciones existentes o crear nuevas
                         opcs: {
@@ -544,11 +543,11 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
             .map((p: any) => Number(p.idp));
 
         const questionsToDelete = existingQuestions
-            .filter(q => !questionIdsInRequest.includes(q.idp));
+            .filter(q => !questionIdsInRequest.includes(q.idca));
 
         for (const question of questionsToDelete) {
-            await prisma.prg.delete({
-                where: { idp: question.idp }
+            await prisma.campos.delete({
+                where: { idca: question.idca }
             });
         }
 

@@ -3,6 +3,7 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { HoraLima } from "../../services/horaLima.service";
 
 const prisma = new PrismaClient();
 
@@ -29,31 +30,24 @@ export const upload = multer({ storage });
 
 
 export const createProject = async (req: Request, res: Response) => {
-    const { dni, id_rol, subunidad, tipo } = req.body;
+    const { tipo } = req.body;
 
-    //console.log(req.file, "file");
-    if (!req.file || !dni || !id_rol || !subunidad) {
-        res.status(400).json({ error: 'Todos los campos son requeridos.' });
-        return;
-    }
-    // Obtener la ruta del archivo
-    const planPath = req.file.path;
-    const fileUrl = `https://2nlfx0w1-3000.brs.devtunnels.ms/uploads/${req.file.filename}`; // Construir la URL pública
     
-    const date = new Date();
-    date.setHours(date.getHours() - 5);
+    // Obtener la ruta del archivo
+    const planPath = req.file?.path;
 
     try {
         // Crear proyecto
+        const subunidad = await prisma.sub_unidad.findUnique({
+            where: { id_subuni: Number(req.usuario?.idsubunidad) }
+        });
         
         const newProject = await prisma.project.create({
             data: {
-                plan: planPath,
-                dni: dni,
-                id_rol: Number(id_rol),
-                subunidad_id_subuni: Number(subunidad),
-                estado: "Pendiente",// actualizar este estado posteriormente
-                tipo: tipo ? tipo:"PROGRAMAESTUDIO", // Add the appropriate value for 'tipo'
+                plan: planPath?.toString() ?? "",
+                idString: subunidad?.abreviatura + "-" + HoraLima()+req.usuario?.iddatauser,
+                fInit: 
+
             },
         });
 

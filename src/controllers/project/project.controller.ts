@@ -41,7 +41,7 @@ class ProjectController {
     public getQuestionsByFormActive = async (req: Request, res: Response): Promise<void> => {
         try {
             const idSubUnidad = Number(req.usuario?.idsubunidad);
-            const ActiveForm = await this.prisma.form.findFirst({
+            const ActiveForm = await this.prisma.plantillaDoc.findFirst({
                 where: {
                     idsubuni: idSubUnidad,
                     estado: true
@@ -53,7 +53,7 @@ class ProjectController {
             }
             const questions = await this.prisma.prg.findMany({
                 where: {
-                    idf: ActiveForm.idf
+                    idPdoc: ActiveForm.idPdoc
                 },
                 select: {
                     idp: true,
