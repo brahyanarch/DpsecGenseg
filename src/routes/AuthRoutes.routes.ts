@@ -1,7 +1,7 @@
 import express from 'express'
-import { login, register, Me } from '../controllers/authController';
-import { ValidateRegisterInput, ValidateLoginInput } from '../middlewares/authValidateInput'
-import {Authenticate} from "../controllers/authController"
+import { login, register, Me } from '../controllers/auth.controller';
+import { ValidateRegisterInput, ValidateLoginInput } from '../middlewares/authValidateInput';
+import {Authenticate} from "../controllers/auth.controller";
 import rateLimit from 'express-rate-limit';
 
 // Configura el límite de intentos de login

@@ -15,112 +15,180 @@ datasource db {
 
 // USUARIO ADMINIDTRADOR
 model User {
-  id Int            @id @default(autoincrement())
-  usuario           String @unique
+  id                Int       @id @default(autoincrement())
+  usuario           String    @unique
   password          String
-  failedAttempts    Int @default(0) // Número de intentos fallidos
+  failedAttempts    Int       @default(0) // Número de intentos fallidos
   lastFailedAttempt DateTime? // Hora del último intento fallido
+
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // TABLA DE ROLES
 model Rol {
-  id_rol      Int     @id     @default(autoincrement())
-  n_rol       String  @unique
-  abrev       String
+  id_rol Int    @id @default(autoincrement())
+  n_rol  String @unique
+  abrev  String
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  
-  datellePermisos   DetallePermiso[]
-  usuarios          Usuario[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  datellePermisos DetallePermiso[]
+  usuarios        Usuario[]
 }
 
+// TABLA DE PERMISOS
 model Permiso {
-  id_per            Int     @id     @default(autoincrement())
-  n_per             String  @unique
-  abreviatura       String?
+  id_per      Int     @id @default(autoincrement())
+  n_per       String  @unique
+  abreviatura String?
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  datellePermisos    DetallePermiso[]
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  datellePermisos DetallePermiso[]
 }
 
+// TABLA AUXILIAR
 model DetallePermiso {
-  id_dper           Int     @id     @default(autoincrement())
-  id_rol            Int 
-  id_per            Int
-  estado            Boolean @default(false)
-  permisos  Permiso @relation(fields: [id_per], references: [id_per])
-  roles     Rol @relation(fields: [id_rol], references: [id_rol])
+  id_dper  Int     @id @default(autoincrement())
+  id_rol   Int
+  id_per   Int
+  estado   Boolean @default(false)
+  permisos Permiso @relation(fields: [id_per], references: [id_per])
+  roles    Rol     @relation(fields: [id_rol], references: [id_rol])
 }
 
+// TABLA DE SUB UNIDAD
 model Sub_unidad {
-  id_subuni Int @id @default(autoincrement())
-  n_subuni  String  @unique
-  abreviatura     String
+  id_subuni   Int    @id @default(autoincrement())
+  n_subuni    String @unique
+  abreviatura String
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  usuarios     Usuario[]
-  form         Form[]
-  plantillas   Plantilla[]
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  usuarios    Usuario[]
+  templateDoc TemplateDoc[]
+  //CerTemplates   CerTemplate[]
 }
 
+// TABLA DE DATOS DEL USUARIO
 model DatosUsuario {
-  iddatauser            Int     @id @default(autoincrement())
-  dni                   String  @db.Char(8) @unique
-  email                 String  @unique
-  nombre                String
-  APaterno              String
-  AMaterno              String
-  password              String
-  idpe                  Int?
-  lastFailedAttempt     DateTime? // Hora del último intento fallido
-  failedAttempts        Int @default(0) // Número de intentos fallidos
-  deletedAt             DateTime? // Campo para soft delete
+  iddatauser        Int       @id @default(autoincrement())
+  dni               String    @unique @db.Char(8)
+  email             String    @unique
+  nombre            String
+  APaterno          String
+  AMaterno          String
+  password          String
+  idpe              Int?
+  lastFailedAttempt DateTime? // Hora del último intento fallido
+  failedAttempts    Int       @default(0) // Número de intentos fallidos
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  usuario               Usuario[]
-  prgest                PrgEstudio?  @relation(fields: [idpe], references: [idpe])
+  softDeleted Boolean   @default(false)
+  deletedAt   DateTime? // Campo para soft delete
+
+  usuario Usuario[]
+  prgest  PrgEstudio? @relation(fields: [idpe], references: [idpe])
 }
 
+// USUARIO CON UN ROL EN UNA SUB UNIDAD
 model Usuario {
-  iduser                Int     @id @default(autoincrement())
-  estado                Boolean @default(true)
+  iduser Int     @id @default(autoincrement())
+  estado Boolean @default(true)
 
-  idrol                 Int     
-  idsubunidad           Int
-  iddatauser            Int
+  idrol       Int
+  idsubunidad Int
+  iddatauser  Int
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  roles                 Rol           @relation(fields: [idrol], references: [id_rol])
-  subunidad             Sub_unidad    @relation(fields: [idsubunidad], references: [id_subuni])
-  datausuario           DatosUsuario  @relation(fields: [iddatauser], references: [iddatauser])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  project               Project[]
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  roles       Rol          @relation(fields: [idrol], references: [id_rol])
+  subunidad   Sub_unidad   @relation(fields: [idsubunidad], references: [id_subuni])
+  datausuario DatosUsuario @relation(fields: [iddatauser], references: [iddatauser])
+
+  document Document[]
+
   @@unique([iddatauser, idrol, idsubunidad])
 }
 
-model Form {
-  idf         Int @id @default(autoincrement())
-  nmForm      String  
-  estado      Boolean @default(false)
-  abre        String?
+// CerTemplateS DINAMICAS DE DOCUMENTOS PARA UNA ACTIVIDAD
+model TemplateDoc {
+  idtdoc   Int     @id @default(autoincrement())
+  name     String
+  estado   Boolean @default(false)
+  abre     String?
+  latex    String? // Contenido en formato LaTeX
+  caratula String? // caratula en latex
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  idsubuni    Int
-  subunidad   Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
-  prg         Prg[]
-  res         Res[]
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  idsubuni  Int
+  subunidad Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
+  block    Block[]
+  campo    Campos[]
+  document Document[]
+
+  @@unique([name, idsubuni])
 }
+
+enum BlockType {
+  SECTION
+  SUBSECTION
+  SUBSUBSECTION
+  PARAGRAPH
+  ITEMIZE
+  ENUMERATE
+  IMAGE
+}
+
+// TABLA DE BLOQUES DE PREGUNTAS
+model Block {
+  idblock     Int       @id @default(autoincrement())
+  content     String?
+  placeholder String?
+  caption     String?
+  type        BlockType
+  orden       Int       @default(0)
+
+  idtdoc Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  softDeleted Boolean   @default(false) // Campo para soft delete
+  deletedAt   DateTime? // Campo para soft delete
+
+  values      Value[]
+  templateDoc TemplateDoc @relation(fields: [idtdoc], references: [idtdoc])
+}
+
+// TIPOS DE DATOS ACEPTADOS PARA CREAR UNA PREGUNTA QUE PERTENECE A UN FORM
 enum Type {
   TEXT
   MULTIPLECHOICE
@@ -131,26 +199,30 @@ enum Type {
   NUMBER
 }
 
-model Prg {
-  idp       Int @id @default(autoincrement())
-  nmPrg     String  
-  idf       Int
+// TABLA DE PREGUNTAS
+model Campos {
+  idca      Int      @id @default(autoincrement())
+  nmCampo   String
+  idtdoc    Int
   type      Type
-  required  Boolean @default(false)
-  
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  required  Boolean  @default(false)
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   form      Form  @relation(fields: [idf], references: [idf])
   opcs      Opc[]
   answers   Answer[]
 }
 
-model Res {
-  idres     Int @id @default(autoincrement())
-  date      DateTime  @default(now())
+// RESPUESTAS
+model Document {
+  iddoc  Int      @id @default(autoincrement())
+  date   DateTime @default(now())
+  pdf    String?
+  values Value[]
 
-  idf       Int
+  idtdoc Int
 
   createdAt             DateTime       @default(now())
   
@@ -160,10 +232,11 @@ model Res {
 
 }
 
+// TABLA DE OPCIONES
 model Opc {
-  idOpc    Int @id @default(autoincrement())
-  idp       Int
-  txtOpc    String
+  idOpc  Int    @id @default(autoincrement())
+  idCam  Int
+  txtOpc String
 
   prg       Prg   @relation(fields: [idp], references: [idp])
 }
@@ -239,160 +312,120 @@ model Answer {
 }
 
 model Facu {
-  idfacu    Int @id @default(autoincrement())
-  nmFacu    String
-  abrev     String?
-  
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  idfacu Int     @id @default(autoincrement())
+  nmFacu String
+  abrev  String?
 
-  escuelas  Escuela[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  escuelas Escuela[]
 }
 
+// TABLA DE UNA ESCUELA PROFESIONAL 
 model Escuela {
-  idesc     Int @id @default(autoincrement())
-  nmEsc     String
-  idfacu    Int
-  abrev     String?
+  idesc  Int     @id @default(autoincrement())
+  nmEsc  String
+  idfacu Int
+  abrev  String?
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  
-  facu      Facu @relation(fields: [idfacu], references: [idfacu])
-  prgest    PrgEstudio[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facu   Facu         @relation(fields: [idfacu], references: [idfacu])
+  prgest PrgEstudio[]
 }
 
+// TABLA DE PROGRAMA DE ESTUDIO
 model PrgEstudio {
-  idpe      Int @id @default(autoincrement())
-  nmPE      String
-  abrev     String?
+  idpe  Int     @id @default(autoincrement())
+  nmPE  String
+  abrev String?
 
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  idesc     Int
-  escuela   Escuela @relation(fields: [idesc], references: [idesc])
+  idesc   Int
+  escuela Escuela @relation(fields: [idesc], references: [idesc])
 
-  estudiante Estudiante[]
+  estudiante   Estudiante[]
   DatosUsuario DatosUsuario[]
 }
 
+// TABLA ESTUDIANTE
 model Estudiante {
-  idest     Int     @id @default(autoincrement())
-  dni       String  
-  codigo    String  @unique @db.Char(6)
-  nombre    String
-  aPaterno  String
-  aMaterno  String
-  email     String
+  idest           Int       @id @default(autoincrement())
+  dni             String
+  codigo          String    @unique @db.Char(6)
+  nombre          String
+  aPaterno        String
+  aMaterno        String
+  email           String
   fechaNacimiento DateTime?
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 
-  idpe      Int
-  prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
-  actividades AlumnoActividad[]
-  receptor    Receptor[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  idpe   Int
+  prgest PrgEstudio @relation(fields: [idpe], references: [idpe])
+  //actividades AlumnoTemplate[]
+  //receptor    Receptor[]
+}
+
+enum EstadoProyecto {
+  PENDIENTE
+  ARCHIVADO
+  CURSO
+  COMPLETADO
+}
+enum TipoProyecto {
+  SUBUNIDAD
+  PROGRAMAESTUDIO
+}
+
+model Project {
+  idproj                Int     @id   @default(autoincrement())
+  plan                  String  
+  estado                String
+  tipo                  TipoProyecto
+  idString              String?
+  fInit                 DateTime?
+  fFin                  DateTime?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  dni                   String
+  id_rol                Int
+  subunidad_id_subuni   Int
+  iduser                Int
+
+  usuario               Usuario @relation(fields: [iduser], references: [iduser])  
+  actividad             Actividad[]
+}
+
+model Actividad {
+  idActivi              Int     @id   @default(autoincrement())
+  name                  String  @unique
+  fInit                 DateTime
+  fFin                  DateTime
+  estado                String
+  idString              String?
+  public                Boolean   @default(false)
+  tipo                  String    @default("normal")
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  idproj                Int
+  idres                 Int
+  project               Project   @relation(fields: [idproj], references: [idproj])
+  res                   Res       @relation(fields: [idres], references: [idres])
+  alumnoActividad       AlumnoActividad[]
 }
 
 enum EstadoAlumnoActividad {
   INSCRITO
   COMPLETADO
   ABANDONADO
-}
-
-model AlumnoActividad {
-  id          Int            @id @default(autoincrement())
-  alumnoId    Int
-  actividadId Int
-  estado      EstadoAlumnoActividad         // Ej: Inscrito, Completado, Abandonado
-  asistio     Boolean        @default(false)
-  fechaInscripcion  DateTime  @default(now())
-  fechaConluida     DateTime? // Opcional: Fecha de completado de la actividad
-  alumno      Estudiante         @relation(fields: [alumnoId], references: [idest]) // Relación con Alumno
-  actividad   Actividad      @relation(fields: [actividadId], references: [idActivi]) // Relación con Actividad
-  notaFinal   Float?         // Opcional: Nota de evaluación en la actividad
-
-}
-
-model Plantilla {
-  idplantilla  Int @id @default(autoincrement())
-  nombre       String
-  idsubunidad  Int
-  urlimg       String
-  tipo         TipoReceptor
-  titulo       String?
-  cuerpo       String?
-  pie          String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  subunidad    Sub_unidad @relation(fields: [idsubunidad], references: [id_subuni])
-  certificados Certificado[]
-}
-
-enum TipoReceptor {
-  PARTICIPANTE
-  ORGANIZADOR
-  COLABORADOR
-  EXTERNO
-}
-
-model Certificado {
-  idcertificado   Int        @id @default(autoincrement())
-  idreceptor      Int
-  codigo          String     @unique
-  nombre          String
-  createdAt       DateTime   @default(now())
-  tipo            TipoReceptor     // 'Participante', 'Organizador', etc.
-  idplantilla     Int     // URL de la plantilla del certificado
-  actividad_ids   Int[]       // IDs de las actividades asociadas [1,2,3]
-  urlpdf          String?     // Opcional: URL del PDF generado   
-  QR              String?     // Opcional: URL del QR del certificado
-  plantilla       Plantilla  @relation(fields: [idplantilla], references: [idplantilla])
-  receptor        Receptor   @relation(fields: [idreceptor], references: [id_receptor])
-}
-
-enum Tipo {
-  ESTUDIANTE
-  EXTERNO
-}
-
-model Receptor {
-  id_receptor   Int @id @default(autoincrement())
-  tipo          Tipo // 'Estudiante', 'Externo', etc.
-  id_estudiante Int? // FK hacia Estudiante
-  id_externo    Int? // FK hacia Externo
-  
-  estudiante    Estudiante? @relation(fields: [id_estudiante], references: [idest])
-  externo       Externo?    @relation(fields: [id_externo], references: [id_ext])
-  certificados  Certificado[] // Relación con certificados emitidos a este receptor
-}
-
-model Externo {
-  id_ext     Int      @id @default(autoincrement())
-  nombre     String
-  apellido   String
-  email      String?  // Opcional, si deseas permitir certificados sin correo electrónico
-  dni        String  @unique// Opcional, si necesitas identificar externamente con un documento
-  telefono   String?  // Información de contacto adicional
-  receptor   Receptor[] // Relación con los receptores externos
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model Carrusel {
-  idcarrusel    Int @id @default(autoincrement())
-  img           String
-  titulo        String
-  subtitulo     String
-}
-
-model Anuncio {
-  idanuncio     Int @id @default(autoincrement())
-  titulo        String
-  descripcion   String
-  fInicio       DateTime
-  fFin          DateTime
 }

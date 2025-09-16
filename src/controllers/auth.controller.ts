@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 /* REGISTRO DEl SISTEMA */
 export const register = async (req: Request, res: Response): Promise<void> => {
-    const {usuario, password} = req.body;
+    const {usuario, password, confirmarPassword} = req.body;
     try {
         const existuser = await prisma.user.findUnique({
             where: {
