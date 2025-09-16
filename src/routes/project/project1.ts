@@ -1,5 +1,5 @@
 import express from 'express'
-import {getProjectStatesAll,  getActivitiesAll,  upload, deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project';
+import {getProjectStatesAll,  getActivitiesAll,  upload, deleteProject, updateProject, getQuestionsByFormActive, createProject, getActivitysByProject, getProjectBySubUnidad, getProjectStates,  getActivitiesAllBySubunidad, getProjectByUserSubUnidad, getProjectAllBySubunidad} from '../../controllers/project/project_antes';
 
 const router = express.Router();
 

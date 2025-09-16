@@ -143,13 +143,7 @@ model Prg {
 
   form      Form  @relation(fields: [idf], references: [idf])
   opcs      Opc[]
-  resom     ResOM[]
-  resou     ResOU[]
-  resod     ResOD[]
-  restxt    ResTxt[]
-  resfile   ResFile[]
-  resdate   ResDate[]
-  resnum    ResNum[]
+  answers   Answer[]
 }
 
 model Res {
@@ -161,15 +155,9 @@ model Res {
   createdAt             DateTime       @default(now())
   
   form      Form  @relation(fields: [idf], references: [idf])
-  resom     ResOM[]
-  resou     ResOU[]
-  resod     ResOD[]
-  restxt    ResTxt[]
-  resfile   ResFile[]
-  resdate   ResDate[]
-  resnum    ResNum[]
+  //actividad Actividad[] 
+  answers   Answer[]  
 
-  actividad Actividad[]
 }
 
 model Opc {
@@ -178,78 +166,77 @@ model Opc {
   txtOpc    String
 
   prg       Prg   @relation(fields: [idp], references: [idp])
-  resom     ResOM[]
-  resou     ResOU[]
-  resod     ResOD[]
 }
 
 
-model ResOM {
-  idresom     Int   @id     @default(autoincrement())
-  idres       Int
-  idp         Int
-  idomul      Int
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-  opcs        Opc  @relation(fields: [idomul], references: [idOpc])
+
+
+enum EstadoPlataforma {
+  PENDIENTE
+  ARCHIVADO
+  CURSO
+  COMPLETADO
+}
+enum TipoProyecto {
+  SUBUNIDAD
+  PROGRAMAESTUDIO
 }
 
-model ResOU {
-  idresou     Int   @id     @default(autoincrement())
-  idres       Int
-  idp         Int
-  idop        Int
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-  opcuni      Opc  @relation(fields: [idop], references: [idOpc])
+model Project {
+  idproj                Int     @id   @default(autoincrement())
+  plan                  String?  
+  estado                EstadoPlataforma
+  tipo                  TipoProyecto
+  idString              String?
+  fInit                 DateTime?
+  fFin                  DateTime?
+  informeFinal          String?
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  iduser                Int
+
+  usuario               Usuario @relation(fields: [iduser], references: [iduser])  
+  actividad             Actividad[]
 }
 
-model ResOD {
-  idresod     Int   @id     @default(autoincrement())
-  idres       Int
-  idp         Int
-  idodes      Int
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-  opcdes      Opc  @relation(fields: [idodes], references: [idOpc])
+model Actividad {
+  idActivi              Int     @id   @default(autoincrement())
+  name                  String  @unique
+  fInit                 DateTime
+  fFin                  DateTime
+  estado                EstadoPlataforma @default(PENDIENTE)
+  idString              String?
+  public                Boolean   @default(false)
+  tipo                  String    @default("normal")
+
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  idproj                Int
+  //idres                 Int
+  project               Project   @relation(fields: [idproj], references: [idproj])
+  //res                   Res       @relation(fields: [idres], references: [idres])
+  alumnoActividad       AlumnoActividad[]
+  Answer                Answer[]
 }
 
-model ResTxt {
-  idrestxt    Int   @id   @default(autoincrement())
-  idp         Int
-  idres       Int
-  resTxt      String?
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
+model Answer {
+  id          Int      @id @default(autoincrement())
+  activityId  Int
+  activity    Actividad @relation(fields: [activityId], references: [idActivi])
+  questionId  Int
+  prg         Prg?     @relation(fields: [questionId], references: [idp]) // Relación añadida
+  textValue   String?
+  optionId    Int?
+  filePath    String?  // Campo añadido para rutas de archivos
+  dateValue   DateTime? // Campo añadido para fechas
+  numberValue Float?   // Campo añadido para números
+  createdAt   DateTime @default(now()) // Valor por defecto añadido
+  res         Res?     @relation(fields: [idres], references: [idres])
+  idres       Int?
 }
-
-model ResFile {
-  idresfile   Int   @id   @default(autoincrement())
-  idres       Int
-  idp         Int
-  resFile     String?
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-}
-
-model ResDate {
-  idresdate   Int   @id   @default(autoincrement())
-  idres       Int
-  idp         Int
-  resdate     DateTime  
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-}
-
-model ResNum {
-  idresnum    Int   @id   @default(autoincrement())
-  idres       Int
-  idp         Int
-  resnum      DateTime  
-  res         Res     @relation(fields: [idres], references: [idres])
-  prg         Prg     @relation(fields: [idp], references: [idp])
-}
-
 
 model Facu {
   idfacu    Int @id @default(autoincrement())
@@ -307,58 +294,6 @@ model Estudiante {
   prgest    PrgEstudio @relation(fields: [idpe], references: [idpe])
   actividades AlumnoActividad[]
   receptor    Receptor[]
-}
-
-enum EstadoProyecto {
-  PENDIENTE
-  ARCHIVADO
-  CURSO
-  COMPLETADO
-}
-enum TipoProyecto {
-  SUBUNIDAD
-  PROGRAMAESTUDIO
-}
-
-model Project {
-  idproj                Int     @id   @default(autoincrement())
-  plan                  String  
-  estado                String
-  tipo                  TipoProyecto
-  idString              String?
-  fInit                 DateTime?
-  fFin                  DateTime?
-
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-
-  dni                   String
-  id_rol                Int
-  subunidad_id_subuni   Int
-  iduser                Int
-
-  usuario               Usuario @relation(fields: [iduser], references: [iduser])  
-  actividad             Actividad[]
-}
-
-model Actividad {
-  idActivi              Int     @id   @default(autoincrement())
-  name                  String  @unique
-  fInit                 DateTime
-  fFin                  DateTime
-  estado                String
-  idString              String?
-  public                Boolean   @default(false)
-  tipo                  String    @default("normal")
-
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-
-  idproj                Int
-  idres                 Int
-  project               Project   @relation(fields: [idproj], references: [idproj])
-  res                   Res       @relation(fields: [idres], references: [idres])
-  alumnoActividad       AlumnoActividad[]
 }
 
 enum EstadoAlumnoActividad {

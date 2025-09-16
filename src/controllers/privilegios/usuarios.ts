@@ -7,7 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import { emit } from "process";
 import { hashPassword, comparePassword} from '../../services/password.service';
 import { generateTokenUsuario, verifyTokenUsuario} from '../../services/auth.service';
-import { enviarCorreo} from '../../services/email.service';
+//import { enviarCorreo} from '../../services/email.service';
 import { HoraLima} from '../../services/horaLima.service';
 import { login} from '../authController'
 import { Usuario, DataUsuario } from "../../models/interface/user.interface";
@@ -159,7 +159,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     });
     // Excluir la contraseña de la respuesta
     const { password: _, ...userWithoutPassword } = newDataUser;
-    enviarCorreo(email, req.body.password);
+    //enviarCorreo(email, req.body.password);
     // Respuesta exitosa
     res.status(201).json(userWithoutPassword);
   } catch (error) {
@@ -178,7 +178,7 @@ export const AsignateRolSubunidad = async (req: Request, res:Response): Promise<
         res.status(401).json({message: 'El rol no existe'});
         return;
       }
-      const subunidad = await prisma.sub_unidad.findUnique({where:{id_subuni: idsubunidad}});
+      const subunidad = await prisma.sub_unidad.findUnique({where:{id_subuni: Number(idsubunidad)}});
       if(!subunidad){
         res.status(401).json({message: 'La sub unidad no existe'});
         return;
@@ -295,6 +295,57 @@ export const getAllRolesToUser = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error al obtener los roles" });
+  }
+};
+
+export const AllUserBySubUnidad = async (req: Request, res: Response): Promise<void> => {
+  const date = HoraLima();
+  console.log(date);
+  // verificar mediante el token si existe el usuario
+  if(!req.usuario){
+    res.status(400).json({message: "el usuario no a sido registrado"});
+    return;
+  }
+
+  try {
+    // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
+    const users = await prisma.usuario.findMany({
+      where: {
+        idsubunidad: Number(req.usuario.idsubunidad)
+      },
+      select: {
+        
+        iduser:true,
+        datausuario: {
+          select: {
+            APaterno: true,
+            AMaterno: true,
+            nombre: true,
+            dni: true,
+            iddatauser: true,
+
+          }
+        },
+        iddatauser: false,
+        estado: true,
+
+        roles: { select: { n_rol: true, id_rol: true } },
+        subunidad: { select: { n_subuni: true, id_subuni: true } },
+        createdAt: true,
+        updatedAt: true,  
+      },
+
+      orderBy: {
+        iduser: "asc"
+      }
+    });
+
+    // Retornamos los usuarios con las relaciones
+    res.json({users:users});
+  } catch (error) {
+    // Si hay un error, lo manejamos
+    console.error(error);
+    res.status(500).json({ error: "Algo salió mal al obtener los usuarios." });
   }
 };
 
@@ -425,9 +476,8 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
 
 
 
-export const AllUserBySubUnidad = async (req: Request, res: Response): Promise<void> => {
-  const date = HoraLima();
-  console.log(date);
+export const getAllRolesToUserTemporal = async (req: Request, res: Response): Promise<void> => {
+
   // verificar mediante el token si existe el usuario
   if(!req.usuario){
     res.status(400).json({message: "el usuario no a sido registrado"});
@@ -436,35 +486,29 @@ export const AllUserBySubUnidad = async (req: Request, res: Response): Promise<v
 
   try {
     // Usamos Prisma para obtener todos los usuarios con sus roles y permisos
-    const users = await prisma.usuario.findMany({
+    const users = await prisma.datosUsuario.findMany({
       where: {
-        idsubunidad: Number(req.usuario.idsubunidad)
+        usuario: { some: { idsubunidad: Number(req.usuario.idsubunidad) } },
       },
       select: {
-        
-        iduser:true,
-        datausuario: {
-          select: {
-            APaterno: true,
-            AMaterno: true,
-            nombre: true,
-            dni: true,
-            iddatauser: true,
+        AMaterno: true,
+        APaterno: true,
+        email: true,
+        iddatauser: true,
+        dni:true,
+        nombre:true,
+        usuario: {select:{
+          estado: true,
+          subunidad: true,
+        }},
 
-          }
-        },
-        iddatauser: false,
-        estado: true,
-
-        roles: { select: { n_rol: true, id_rol: true } },
-        subunidad: { select: { n_subuni: true, id_subuni: true } },
-        createdAt: true,
-        updatedAt: true,  
+        updatedAt: true,
+        createdAt:true, 
       },
 
       orderBy: {
-        iduser: "asc"
-      }
+        iddatauser: "asc",
+      },
     });
 
     // Retornamos los usuarios con las relaciones
