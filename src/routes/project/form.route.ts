@@ -1,7 +1,7 @@
 import express from 'express'
 import FormController from '../../controllers/project/formulario.controller';
 import {AuthenticateUsuario} from '../../controllers/privilegios/usuarios';
-import { ValidateInputForm, ValidateToggleForm, ValidateQuestionsForm} from '../../middlewares/project/validateInputForm';
+import { ValidateInputForm, ValidateToggleForm, ValidateQuestionsForm} from '../../middlewares/project/project.middleware';
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */

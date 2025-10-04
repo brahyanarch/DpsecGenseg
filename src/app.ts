@@ -12,7 +12,7 @@ import authRoutes from './routes/AuthRoutes.routes'
 import Usuarios from './routes/privilegios/usuarios.route'
 import Roles from './routes/privilegios/roles'
 //import subUnidad from './routes/privilegios/subUnidad'
-//import Permisos from './routes/privilegios/permisos'
+import Permisos from './routes/privilegios/permisos'
 //import De_permisos from './routes/privilegios/de_permisos'
 import Form from './routes/project/form.route'
 import Project from './routes/project/project.route'
@@ -47,7 +47,7 @@ app.use('/auth', authRoutes);
 app.use('/api/auth', Usuarios);
 app.use('/api', Roles);
 //app.use('/api', subUnidad);
-//app.use('/api', Permisos);
+app.use('/api', Permisos);
 //app.use('/api', De_permisos);
 app.use('/api', Form);
 app.use('/api', Project);

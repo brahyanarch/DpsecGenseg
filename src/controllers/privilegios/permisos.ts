@@ -27,7 +27,7 @@ export const createPermisoWithDePermisos = async (req: Request, res: Response): 
             data: allRoles.map(role => ({
                 id_rol: role.id_rol,
                 id_per: newPermiso.id_per,
-                estado: false,  // O puedes ajustar el estado según lo que necesites
+                estado: true,  // O puedes ajustar el estado según lo que necesites
             })),
         });
 

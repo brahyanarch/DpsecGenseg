@@ -361,13 +361,14 @@ class FormController {
     res: Response
   ): Promise<void> => {
     const { id } = req.params;
-
+    // nesecito ver si este usuario tiene permiso para ver este formulario
+    
     try {
       const form = await this.prisma.form.findUnique({
-        where: { idf: Number(id) },
+        where: { idf: Number(id), idsubuni: Number(req.usuario?.idsubunidad) },
       });
       if (!form) {
-        res.status(404).json({ message: "Formulario no encontrado" });
+        res.status(404).json({ message: "Formulario no encontrado", preguntas:[]});
         return;
       }
       const questions = await this.prisma.prg.findMany({
