@@ -8,9 +8,10 @@ import {ValidatePlanPDF} from '../../middlewares/project/project.middleware';
 const router = express.Router();
 
 /** RUTAS REGISTRO Y LOGIN */
-router.post('/template', AuthController.AuthenticateUsuario, PlantillaDocController.createPlantillaDoc);
+router.post('/template/doc', AuthController.AuthenticateUsuario, PlantillaDocController.createPlantillaDoc);
 // devuelve las plantillas documentarias activas de un sub uinidad 
-router.get('/template', AuthController.AuthenticateUsuario, PlantillaDocController.getPlantillaDocBySubUnidad);
-router.get('/template/name/:id', AuthController.AuthenticateUsuario, PlantillaDocController.getNamePlantillaDocById);
-
+router.get('/template/doc', AuthController.AuthenticateUsuario, PlantillaDocController.getPlantillasBySubUnidad);
+router.get('/template/doc/name/:id', AuthController.AuthenticateUsuario, PlantillaDocController.getBodyDocumentById);
+router.put('/template/toggle/:id', AuthController.AuthenticateUsuario, PlantillaDocController.toggleEstadoPlantillaDoc);
+router.get('/template/doc/actives', AuthController.AuthenticateUsuario, PlantillaDocController.getAllActivePlantillas);
 export default router;

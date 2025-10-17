@@ -13,10 +13,11 @@ import Usuarios from './routes/privilegios/usuarios.route'
 import Roles from './routes/privilegios/roles'
 //import subUnidad from './routes/privilegios/subUnidad'
 import Permisos from './routes/privilegios/permisos'
-//import De_permisos from './routes/privilegios/de_permisos'
+import Task from './routes/task/task.routes'
 import Form from './routes/project/form.route'
 import Project from './routes/project/project.route'
-/*import Actividad from './routes/project/actividades'
+import TemplateDoc from './routes/plantillaDoc/plantillaDoc.routes'
+/*
 import Facultad from './routes/facultad/facultad'
 import Escuela from './routes/facultad/escuela'
 import PrgEstudio from './routes/facultad/prgEstudio'
@@ -46,19 +47,14 @@ app.use(cors());
 app.use('/auth', authRoutes);
 app.use('/api/auth', Usuarios);
 app.use('/api', Roles);
-//app.use('/api', subUnidad);
 app.use('/api', Permisos);
-//app.use('/api', De_permisos);
 app.use('/api', Form);
 app.use('/api', Project);
-/*app.use('/api', Actividad);
-app.use('/api', Facultad);
-app.use('/api', Escuela);
-app.use('/api', PrgEstudio);
-/*app.use('/api', Pagina);
-app.use('/api', Anuncio);
-app.use('/api', Plantilla);
-app.use('/api', Certificado);*/
+app.use('/api', TemplateDoc);
+app.use('/api', Task);
 
+
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 export default app;

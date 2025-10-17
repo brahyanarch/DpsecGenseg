@@ -66,6 +66,7 @@ model Sub_unidad {
   usuarios     Usuario[]
   form         Form[]
   plantillas   Plantilla[]
+  plantillasDoc PlantillaDocumento[]
 }
 
 model DatosUsuario {
@@ -107,6 +108,20 @@ model Usuario {
   @@unique([iddatauser, idrol, idsubunidad])
 }
 
+model ConfigForm {
+  idcf          Int @id @default(autoincrement())
+  longActivity  Boolean @default(false)
+  iddoc         Int?   @unique   
+  idf           Int    @unique
+  allowDocLink  Boolean @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime?
+
+  form          Form @relation(fields: [idf], references: [idf])
+  plantillaDoc  PlantillaDocumento? @relation(fields: [iddoc], references: [idplantilladoc])
+}
+
 model Form {
   idf         Int @id @default(autoincrement())
   nmForm      String  
@@ -115,7 +130,9 @@ model Form {
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime? 
-
+  softDelete  Boolean   @default(false)
+  
+  config      ConfigForm?   
   idsubuni    Int
   subunidad   Sub_unidad @relation(fields: [idsubuni], references: [id_subuni])
   prg         Prg[]
@@ -236,6 +253,48 @@ model Answer {
   createdAt   DateTime @default(now()) // Valor por defecto añadido
   res         Res?     @relation(fields: [idres], references: [idres])
   idres       Int?
+}
+
+enum TipoSeccion {
+  section
+  subsection
+  subsubsection
+  text
+  itemize
+  enumerate
+}
+
+model PlantillaDocumento {
+  idplantilladoc  Int @id @default(autoincrement())
+  idsubunidad      Int
+  
+  nombre          String
+  estado          Boolean   @default(true)
+  descripcion     String?
+
+  sofdelete       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  cuerpo          CuerpoPlantillaDocumento[]
+  subunidad       Sub_unidad @relation(fields: [idsubunidad], references: [id_subuni])
+  configForms    ConfigForm?
+}
+
+model CuerpoPlantillaDocumento {
+  idcuerpo        Int @id @default(autoincrement())
+  idplantilladoc  Int
+
+  type           TipoSeccion
+  contenido      String?   // texto libre o título
+  items          Json?     // lista de items si aplica
+  iseditable     Boolean   @default(false)
+  orden          Int?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  plantillaDoc    PlantillaDocumento @relation(fields: [idplantilladoc], references: [idplantilladoc])
 }
 
 model Facu {
@@ -395,4 +454,20 @@ model Anuncio {
   descripcion   String
   fInicio       DateTime
   fFin          DateTime
+}
+
+enum Estado {
+  COMPLETADO
+  ENPROCESO
+  PENDIENTE
+  ARCHIVADO
+}
+
+model task {
+  idtask        Int @id @default(autoincrement())
+  title         String
+  description   String?
+  estado   Estado @default(PENDIENTE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

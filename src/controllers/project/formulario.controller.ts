@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import { HoraLima } from "../../services/horaLima.service";
 import { Type } from "@prisma/client";
+import { all } from "axios";
 
 class FormController {
   private prisma: PrismaClient;
@@ -10,17 +11,8 @@ class FormController {
     this.prisma = new PrismaClient();
   }
 
-  /*public getClassrooms = async(req: Request, res: Response): Promise<void> => {
-    try {
-      const classrooms = await this.prisma.classroom.findMany();
-      res.json({ data: classrooms });
-    } catch (error) {
-      res.status(500).json({ error: 'Error obteniendo clases' });
-    }
-  }*/
-
   public createForm = async (req: Request, res: Response): Promise<void> => {
-    const { name, preguntas } = req.body;
+    const { name, preguntas, longActivity, allowDocLink, iddoc } = req.body;
     const date = HoraLima();
     //console.log("preguntas, ", preguntas);
     try {
@@ -147,6 +139,34 @@ class FormController {
           return;
         }
       }
+      console.log(iddoc, "iddoc");
+      // comprobar que exista iddoc
+      const doc = await this.prisma.plantillaDocumento.findUnique({
+        where: { idplantilladoc: Number(iddoc) },
+      });
+
+      if (doc) {
+        const configForm = await this.prisma.configForm.create({
+          data: {
+            idf: newForm.idf,
+            longActivity: longActivity || false,
+            allowDocLink: allowDocLink || false,
+            iddoc: allowDocLink ? iddoc : null,
+            createdAt: HoraLima(),
+            updatedAt: HoraLima(),
+          },
+        });
+      }
+      else {
+        await this.prisma.configForm.create({
+          data: {
+            idf: newForm.idf,
+            createdAt: HoraLima(),
+            updatedAt: HoraLima(),
+          },
+        });
+      }
+
       res.status(201).json(newForm);
       //return;
     } catch (error) {
@@ -182,36 +202,99 @@ class FormController {
   };
 
   public getAllFormsBySubUnidad = async (
-    req: Request,
+    req: Request<
+      {},
+      {},
+      {},
+      {
+        page?: string;
+        limit?: string;
+        sort?: string;
+        search?: string;
+        estado?: string;
+      }
+    >,
     res: Response
   ): Promise<void> => {
     try {
-      // Consultamos todas las subunidades en la base de datos
-      const forms = await this.prisma.form.findMany({
-        where: {
-          idsubuni: Number(req.usuario?.idsubunidad),
+      const idsubuni = Number(req.usuario?.idsubunidad);
+
+      // Parámetros con valores por defecto
+      const { page = "1", limit = "10", sort, search, estado } = req.query;
+
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
+
+      // Condiciones dinámicas
+      const where: any = {
+        idsubuni,
+      };
+
+      if (estado !== undefined) {
+        where.estado = estado === "true"; // filtro booleano
+      }
+
+      if (search) {
+        where.OR = [
+          { nmForm: { contains: search, mode: "insensitive" } },
+          { abre: { contains: search, mode: "insensitive" } },
+        ];
+      }
+
+      // Orden dinámico
+      const orderBy: Record<string, "asc" | "desc"> = {};
+      if (sort) {
+        const [field, order] = sort.split(":");
+        if (order === "asc" || order === "desc") {
+          orderBy[field] = order;
+        }
+      }
+
+      // Consultas paralelas
+      const [forms, totalCount] = await Promise.all([
+        this.prisma.form.findMany({
+          skip,
+          take: limitNum,
+          where,
+          select: {
+            idf: true,
+            nmForm: true,
+            abre: true,
+            estado: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy:
+            Object.keys(orderBy).length > 0 ? orderBy : { createdAt: "desc" },
+        }),
+        this.prisma.form.count({ where }),
+      ]);
+
+      // Calcular metadatos de paginación
+      const totalPages = Math.ceil(totalCount / limitNum);
+      const hasNext = pageNum < totalPages;
+      const hasPrev = pageNum > 1;
+
+      // Respuesta final
+      res.status(200).json({
+        success: true,
+        data: forms,
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalCount,
+          hasNext,
+          hasPrev,
+          limit: limitNum,
         },
-        select: {
-          idf: true,
-          nmForm: true,
-          abre: true,
-          estado: true,
-          createdAt: true,
-          updatedAt: true,
-          idsubuni: false,
-        },
-        orderBy: { idf: "asc" },
       });
-      // Enviamos las subunidades encontradas
-      res.status(200).json(forms);
-      return;
-    } catch (error: any) {
-      console.error(error);
+    } catch (error) {
+      console.error("Error al obtener los formularios:", error);
       res.status(500).json({
-        message: "Hubo un error al obtener las subunidades",
-        error: error.message,
+        success: false,
+        error: "Error interno del servidor",
       });
-      return;
     }
   };
 
@@ -239,9 +322,10 @@ class FormController {
       }
 
       // Eliminar la subunidad
-      await this.prisma.form.delete({
-        where: { idf: formId },
-      });
+      //await this.prisma.form.update({
+      //  where: { idf: formId },
+      //  data: { : false },
+      //});
 
       // Enviar respuesta exitosa
       res.status(200).json({ message: "Formulario eliminada con éxito" });
@@ -268,11 +352,9 @@ class FormController {
 
       // Validar que se proporciona al menos un campo para actualizar
       if (!name && !abrev) {
-        res
-          .status(400)
-          .json({
-            message: "Debe proporcionar al menos un campo para actualizar",
-          });
+        res.status(400).json({
+          message: "Debe proporcionar al menos un campo para actualizar",
+        });
       }
 
       // Convertir el ID a número (si es necesario)
@@ -310,49 +392,57 @@ class FormController {
   };
 
   public updateEstado = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params; // ID del formulario desde la URL
-    const { estado } = req.body; // 👈 Recibimos el estado desde el cuerpo de la solicitud
+    const { id } = req.params;
+    const { estado } = req.body;
 
     try {
-      //if (id) throw new Error('Error de prueba');
+      // Validar ID
       const formId = Number(id);
-
-      // Validar si el estado es un booleano
-      if (typeof estado !== "boolean") {
-        res
-          .status(400)
-          .json({ message: "El campo 'estado' debe ser true o false" });
+      if (isNaN(formId)) {
+        res.status(400).json({ success: false, message: "ID inválido." });
         return;
       }
-      //throw new Error('Error de prueba');
-      // Si el nuevo estado es "true", desactivar otros formularios activos
-      if (estado === true) {
-        const formOld = await this.prisma.form.findFirst({
-          where: { estado: true, idsubuni: Number(req.usuario?.idsubunidad) },
-        });
 
-        if (formOld) {
-          await this.prisma.form.update({
-            where: { idf: formOld?.idf },
-            data: { estado: false },
-          });
-        }
+      // Validar tipo de estado
+      if (typeof estado !== "boolean") {
+        res.status(400).json({
+          success: false,
+          message: "El campo 'estado' debe ser true o false.",
+        });
+        return;
       }
 
-      // Actualizar el estado del formulario especificado
-      await this.prisma.form.update({
+      // Verificar si el formulario existe
+      const existingForm = await this.prisma.form.findUnique({
         where: { idf: formId },
-        data: { estado: estado }, // 👈 Usamos el valor recibido
+        select: { idf: true },
       });
 
-      res.status(200).json({ message: "Estado actualizado correctamente" });
+      if (!existingForm) {
+        res
+          .status(404)
+          .json({ success: false, message: "Formulario no encontrado." });
+        return;
+      }
+
+      // Actualizar el estado
+      await this.prisma.form.update({
+        where: { idf: formId },
+        data: { estado },
+      });
+
+      // Responder al cliente
+      res.status(200).json({
+        success: true,
+        message: `Estado del formulario actualizado correctamente a ${estado}.`,
+      });
     } catch (error: any) {
-      //console.error(error);
+      console.error("Error al actualizar el estado del formulario:", error);
       res.status(500).json({
-        message: "Error al actualizar el formulario",
+        success: false,
+        message: "Error interno del servidor al actualizar el estado.",
         error: error.message,
       });
-      return;
     }
   };
 
@@ -362,13 +452,15 @@ class FormController {
   ): Promise<void> => {
     const { id } = req.params;
     // nesecito ver si este usuario tiene permiso para ver este formulario
-    
+
     try {
       const form = await this.prisma.form.findUnique({
         where: { idf: Number(id), idsubuni: Number(req.usuario?.idsubunidad) },
       });
       if (!form) {
-        res.status(404).json({ message: "Formulario no encontrado", preguntas:[]});
+        res
+          .status(404)
+          .json({ message: "Formulario no encontrado", preguntas: [] });
         return;
       }
       const questions = await this.prisma.prg.findMany({
@@ -414,7 +506,23 @@ class FormController {
         };
       });
 
-      res.status(200).json({ preguntas: questions, name: form.nmForm });
+      const config = await this.prisma.configForm.findFirst({
+        where: { idf: form.idf },
+        select: {
+          longActivity: true,
+          allowDocLink: true,
+          iddoc: true,
+        },
+      });
+
+      if(!config)
+      {
+        res.status(200).json({ preguntas: formattedQuestions, name: form.nmForm, config: { longActivity: false, allowDocLink: false, iddoc: null } });
+        return;
+      }
+
+
+      res.status(200).json({ preguntas: questions, name: form.nmForm, config });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({
@@ -432,8 +540,37 @@ class FormController {
     const { preguntas, name } = req.body;
     //console.log("id, ", req.body);
     //console.log("preguntas, ", req.body.preguntas);
+    const { iddoc, longActivity, allowDocLink } = req.body;
+    // actualizar la configuracion del formulario
 
     try {
+      
+      const existingConfig = await this.prisma.configForm.findUnique({
+        where: { idf: Number(id) },
+      });
+      if (existingConfig) {
+        await this.prisma.configForm.update({
+          where: { idf: Number(id) },
+          data: {
+            longActivity: longActivity || false,
+            allowDocLink: allowDocLink || false,
+            iddoc: allowDocLink ? iddoc : null,
+            updatedAt: HoraLima(),
+          },
+        });
+      } else {
+        await this.prisma.configForm.create({
+          data: {
+            idf: Number(id),
+            longActivity: longActivity || false,
+            allowDocLink: allowDocLink || false,
+            iddoc: allowDocLink ? iddoc : null,
+            createdAt: HoraLima(),
+            updatedAt: HoraLima(),
+          },
+        });
+      }
+
       const form = await this.prisma.form.findUnique({
         where: { idf: Number(id) },
       });
@@ -518,6 +655,8 @@ class FormController {
         });
       }
 
+
+
       console.log(existingQuestions, "preguntas");
       res.status(200).json({ message: "Pregunta actualizada correctamente" });
     } catch (error: any) {
@@ -544,9 +683,9 @@ class FormController {
         where: { idf: formId },
         include: {
           prg: {
-            include: { opcs: true } // Incluir opciones de preguntas
-          }
-        }
+            include: { opcs: true }, // Incluir opciones de preguntas
+          },
+        },
       });
 
       if (!originalForm) {
@@ -561,10 +700,14 @@ class FormController {
         data: {
           idsubuni: originalForm.idsubuni,
           nmForm: newName,
-          abre: newName.substring(0, 3) + date.getFullYear() + '-' + originalForm.idsubuni,
+          abre:
+            newName.substring(0, 3) +
+            date.getFullYear() +
+            "-" +
+            originalForm.idsubuni,
           createdAt: date,
-          updatedAt: date
-        }
+          updatedAt: date,
+        },
       });
 
       // 3. Mapear y duplicar preguntas con opciones
@@ -575,19 +718,21 @@ class FormController {
             idf: newForm.idf,
             nmPrg: pregunta.nmPrg,
             type: pregunta.type as Type,
-          }
+          },
         });
 
         // Duplicar opciones si existen
-        if (pregunta.opcs.length > 0 && 
-            (pregunta.type === Type.MULTIPLECHOICE || 
-             pregunta.type === Type.SINGLECHOICE || 
-             pregunta.type === Type.DROPDOWN)) {
+        if (
+          pregunta.opcs.length > 0 &&
+          (pregunta.type === Type.MULTIPLECHOICE ||
+            pregunta.type === Type.SINGLECHOICE ||
+            pregunta.type === Type.DROPDOWN)
+        ) {
           await this.prisma.opc.createMany({
-            data: pregunta.opcs.map(opcion => ({
+            data: pregunta.opcs.map((opcion) => ({
               idp: newQuestion.idp,
-              txtOpc: opcion.txtOpc
-            }))
+              txtOpc: opcion.txtOpc,
+            })),
           });
         }
       }
@@ -605,11 +750,10 @@ class FormController {
   ): Promise<void> => {
     try {
       const form = await this.prisma.form.findFirst({
-        where: { estado:true, idsubuni: Number(req.usuario?.idsubunidad) },
+        where: { estado: true, idsubuni: Number(req.usuario?.idsubunidad) },
         select: {
           idf: true,
         },
-
       });
       if (!form) {
         res.status(404).json({ message: "No hay formulario activo." });
