@@ -14,6 +14,9 @@ router.put('/form/toggle/:id', AuthenticateUsuario, ValidateToggleForm, FormCont
 //router.put('/form/:id', updateForm);
 router.delete('/form/:id', FormController.deleteForm);
 router.get('/form/preguntas', AuthenticateUsuario, FormController.getAllQuestions);
+router.get('/form/actives', AuthenticateUsuario, FormController.getAllActiveForms);
+router.get('/form/config/:id', AuthenticateUsuario, FormController.getConfigForm);
+
 export default router;
 
 {}

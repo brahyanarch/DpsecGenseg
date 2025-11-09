@@ -234,31 +234,100 @@ class ProjectController {
   }
 }
 
-public getProjects = async (req: Request, res: Response): Promise<void> => {
+public getProjects = async (
+  req: Request<{}, {}, {}, {
+        page?: string;
+        limit?: string;
+        sort?: string;
+        search?: string;
+        estado?: string;
+      }>,
+  res: Response
+): Promise<void> => {
   try {
-    const projects = await this.prisma.project.findMany({
-      where:{iduser: Number(req.usuario?.iduser) },
-      select:{
-        idproj:true,
-        idString: true,
-        estado: true,
-        fInit: true,
-        fFin: true,
-        createdAt: true,
-        updatedAt: true
-      },
-      orderBy: {
-        idproj: 'asc'
-      }
-    });
+    // Extraer parámetros de consulta con valores por defecto
+    const { page = "1", limit = "10", sort, search, estado } = req.query;
 
-   
-    res.json(projects);
+    // Calcular paginación
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Construir el filtro `where`
+    const where: any = {
+      iduser: Number(req.usuario?.iduser),
+    };
+
+    if (estado) {
+      where.estado = estado;
+    }
+
+    if (search) {
+      // Si quieres buscar por nombre u otro campo, cambia "idString" por el campo adecuado
+      where.idString = {
+        contains: search,
+        mode: "insensitive", // hace la búsqueda sin importar mayúsculas/minúsculas
+      };
+    }
+
+    // Parsear parámetro de ordenamiento
+    const orderBy: Record<string, "asc" | "desc"> = {};
+    if (sort) {
+      const [field, order] = sort.split(":");
+      if (order === "asc" || order === "desc") {
+        orderBy[field] = order;
+      }
+    }
+
+    // Ejecutar las consultas en paralelo (findMany + count)
+    const [projects, totalCount] = await Promise.all([
+      this.prisma.project.findMany({
+        skip,
+        take: limitNum,
+        where,
+        select: {
+          idproj: true,
+          idString: true,
+          estado: true,
+          fInit: true,
+          fFin: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy:
+          Object.keys(orderBy).length > 0 ? orderBy : { createdAt: "desc" },
+      }),
+      this.prisma.project.count({ where }),
+    ]);
+
+    // Calcular metadatos de paginación
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const hasNext = pageNum < totalPages;
+    const hasPrev = pageNum > 1;
+
+    // Enviar respuesta en formato estandarizado
+    res.json({
+      success: true,
+      data: projects,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalCount,
+        hasNext,
+        hasPrev,
+        limit: limitNum,
+      },
+    });
   } catch (error) {
     console.error("Error al obtener proyectos:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json({
+      success: false,
+      error: "Error interno del servidor",
+    });
   }
 };
+
+
 
 
 private async generateProjectPDF(

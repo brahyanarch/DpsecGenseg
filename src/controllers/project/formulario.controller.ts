@@ -782,6 +782,59 @@ class FormController {
       res.status(500).json({ error: "Error interno del servidor." });
     }
   };
+
+  public getAllActiveForms = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const idsubuni = Number(req.usuario?.idsubunidad);
+      
+      const formularios = await this.prisma.form.findMany({
+        where: { estado: true, 
+          //sofdelete: false, 
+          idsubuni: idsubuni },
+        select: {
+          idf: true,
+          nmForm: true,
+          abre: true,
+          estado: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      res.status(200).json({ formularios });
+    } catch (error) {
+      console.error("Error fetching active plantillas:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  };
+
+  public getConfigForm = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const idform = Number(req.params.id);
+      
+      const configForm = await this.prisma.configForm.findUnique({
+        where: { idf: idform },
+        select: {
+          longActivity: true,
+          iddoc: true,
+          allowDocLink: true,
+          
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      res.status(200).json({ configForm });
+    } catch (error) {
+      console.error("Error fetching active plantillas:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  };
 }
 
 export default new FormController();
