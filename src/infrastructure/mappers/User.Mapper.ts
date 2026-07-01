@@ -1,0 +1,31 @@
+// src/infrastructure/mappers/User.Mapper.ts
+import { User as PrismaUser } from "@prisma/client"; // El modelo de Prisma
+import { entUser } from "../../domain/entities/ent.User";
+
+export class UserMapper {
+    public static toDomain(raw: any): entUser {
+        // Aquí conviertes el objeto sucio de Prisma a tu Entidad limpia
+        return new entUser(
+            raw.idUser,
+            raw.cEmail,
+            raw.cPassword,
+            raw.cNombre,
+            raw.asignaciones.map((a: any) => ({
+                idRol: a.idRol,
+                cNombreRol: a.rol.cNombreRol,
+                idOficina: a.idOficina,
+                dExpiresAt: a.dExpiresAt
+            }))
+        );
+    }
+
+    public static toPersistence(user: entUser) {
+        return {
+            cEmail: user.getEmail(),
+            cPassword: user.getCPassword(),
+            cNombre: user.getNombre(),
+            // Nota: Si tu tabla 'users' requiere nFailedAttempts por defecto, 
+            // agrégalo aquí o deja que Prisma lo gestione si tiene default en el schema.
+        };
+    }
+}

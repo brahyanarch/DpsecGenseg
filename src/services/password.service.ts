@@ -1,11 +1,17 @@
+// src/services/password.service.ts
+import { config } from '../config/env';
 import bcrypt from 'bcrypt';
-const SALT_ROUNDS: number = 10;
 
+/**
+ * Encripta la contraseña antes de guardarla en la base de datos
+ */
 export const hashPassword = async (password: string): Promise<string> => {
-    return await bcrypt.hash(password, SALT_ROUNDS);
-}
+    return await bcrypt.hash(password, config.bcrypt.saltRounds);
+};
 
-// Leer y comparar con el hash de la base de datos
+/**
+ * Compara una contraseña en texto plano con un hash almacenado
+ */
 export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
-    return await bcrypt.compare(password, hash);    
-}
+    return await bcrypt.compare(password, hash);
+};

@@ -3,9 +3,8 @@ import "dotenv/config";
 import { defineConfig } from "@prisma/config";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma", // Asegúrate de que tu schema esté aquí
+  schema: "prisma/schema.prisma",
   datasource: {
-    // Usamos process.env en lugar de env() en TypeScript
     url: process.env.POSTGRESDB_URL,
   },
 });
