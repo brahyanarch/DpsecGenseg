@@ -1,8 +1,10 @@
-// src/infrastructure/http/controllers/auth.controller.ts
+// src/modules/user/infrastructure/http/controllers/auth.controller.ts
 import { Request, Response, NextFunction } from "express";
 import { repoUserPrisma } from "../../repositories/repo.User.Prisma"; // Adaptador real
 import { useLogin } from "../../../aplication/useCases/auth/use.Login"; // Caso de uso
 import { useRegister } from "../../../aplication/useCases/auth/use.Register";
+import { AssignRoleDTO } from "../dto/dto.AssignRole";
+import { useAssignRole } from "../../../aplication/useCases/auth/use.AssignRole";
 
 const userRepo = new repoUserPrisma();
 const loginUseCase = new useLogin(userRepo);
@@ -14,7 +16,7 @@ const registerUseCase = new useRegister(userRepo);
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { cEmail, cPassword } = req.body;
-
+        console.log("Datos recibidos en el controlador:", { cEmail, cPassword });
         // 1. Llamada al Caso de Uso (La lógica de negocio)
         const result = await loginUseCase.execute(cEmail, cPassword);
 
@@ -41,3 +43,15 @@ export const register = async (req: Request, res: Response, next: NextFunction):
         next(error);
     }
 };
+
+export class AuthController {
+    public static async assignRole(req: Request, res: Response) {
+        const data: AssignRoleDTO = req.body;
+        
+        // Instanciar caso de uso y ejecutar
+        const useCase = new useAssignRole(new repoUserPrisma());
+        await useCase.execute(data);
+        
+        return res.status(201).json({ nSuccess: true, cMessage: "Rol asignado correctamente" });
+    }
+}

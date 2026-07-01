@@ -1,9 +1,11 @@
 // src/domain/entities/ent.User.ts
 
-export interface AssignedRole {
+export interface Perfil {
     idRol: number;
     cNombreRol: string;
     idOficina: number;
+    cNombreOficina: string;
+    lVigente: boolean;
     dExpiresAt: Date | null;
 }
 
@@ -13,7 +15,7 @@ export class entUser {
         private readonly _cEmail: string,
         private readonly _cPassword: string | null,
         private readonly _cNombre: string | null,
-        private readonly _assignedRoles: AssignedRole[]
+        private readonly _perfiles: Perfil[]
     ) {}
 
     // ESTÁNDAR: Métodos de acceso (Getters explícitos)
@@ -26,10 +28,11 @@ export class entUser {
 
     // Regla de negocio: ¿Tiene rol activo?
     public hasActiveRole(idOficina: number, nombreRol: string): boolean {
-        return this._assignedRoles.some(role => 
-            role.idOficina === idOficina && 
-            role.cNombreRol === nombreRol &&
-            (role.dExpiresAt === null || role.dExpiresAt > new Date())
+        return this._perfiles.some(perfil => 
+            perfil.idOficina === idOficina && 
+            perfil.cNombreRol === nombreRol &&
+            perfil.lVigente === true &&
+            (perfil.dExpiresAt === null || perfil.dExpiresAt > new Date())
         );
     }
 }

@@ -10,7 +10,7 @@ export class UserMapper {
             raw.cEmail,
             raw.cPassword,
             raw.cNombre,
-            raw.asignaciones.map((a: any) => ({
+            raw.perfiles.map((a: any) => ({
                 idRol: a.idRol,
                 cNombreRol: a.rol.cNombreRol,
                 idOficina: a.idOficina,

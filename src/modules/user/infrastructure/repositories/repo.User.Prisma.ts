@@ -3,6 +3,7 @@ import { prisma } from "../../../../shared/database/prisma.client";
 import { portUserRepository } from "../../domain/repositories/port.User.Repository";
 import { entUser } from "../../domain/entities/ent.User";
 import { UserMapper } from "../mappers/User.Mapper"; 
+import { AssignRoleDTO } from "../http/dto/dto.AssignRole";
 
 export class repoUserPrisma implements portUserRepository {
     
@@ -12,7 +13,7 @@ export class repoUserPrisma implements portUserRepository {
         const userDb = await prisma.user.findUnique({
             where: { cEmail: cEmail },
             include: {
-                asignaciones: { include: { rol: true, oficina: true } }
+                perfiles: { include: { rol: true, oficina: true } }
             }
         });
 
@@ -26,7 +27,7 @@ export class repoUserPrisma implements portUserRepository {
         const userDb = await prisma.user.findUnique({
             where: { idUser: id },
             include: {
-                asignaciones: { include: { rol: true, oficina: true } }
+                perfiles: { include: { rol: true, oficina: true } }
             }
         });
         console.log("Resultado de la consulta a la base de datos:", userDb);
@@ -49,5 +50,18 @@ export class repoUserPrisma implements portUserRepository {
             where: { idUser },
             data: { nFailedAttempts: attempts, dLastFailedAttempt: date }
         });
+    }
+
+    async assignRole(data: AssignRoleDTO): Promise<boolean | null> {
+        await prisma.usuarioUniversidad.create({
+            data: {
+                idUser: data.idUser,
+                idRol: data.idRol,
+                idOficina: data.idOficina,
+                lVigente: true, // Por defecto al asignar
+                dExpiresAt: data.dExpiresAt || null,
+            }
+        });
+        return true;
     }
 }

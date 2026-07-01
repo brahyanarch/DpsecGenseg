@@ -80,7 +80,7 @@ model UsuarioUniversidad {
   idRol         Int      
   idOficina      Int
   
-  // AQUÍ ESTÁ LA MAGIA MANTIS BT: Rol temporal
+  // Rol temporal
   dExpiresAt     DateTime? 
 
   dCreatedAt      DateTime @default(now())

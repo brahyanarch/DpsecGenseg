@@ -10,7 +10,7 @@ export class useLogin {
     public async execute(email: string, passwordInput: string) {
         // 1. Obtener usuario del puerto
         const user = await this._userRepository.findByEmail(email);
-        
+        console.log("Usuario encontrado:", user);
         // 2. Validación de seguridad: No revelar si el email no existe
         if (!user) throw new Error("INVALID_CREDENTIALS");
 
