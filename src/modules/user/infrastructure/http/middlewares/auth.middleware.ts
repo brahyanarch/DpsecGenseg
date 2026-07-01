@@ -1,6 +1,6 @@
 // src/infrastructure/http/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from "express";
-import { verifyToken, TokenPayload } from "../../../services/auth.service";
+import { verifyToken, TokenPayload } from "../../../../../shared/services/auth.service";
 import { appError } from "../../../domain/exceptions/app.Error";
 
 // Extendemos el Request de Express para incluir el usuario

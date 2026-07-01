@@ -1,5 +1,5 @@
 // src/infrastructure/repositories/repo.User.Prisma.ts
-import { prisma } from "../database/prisma.client";
+import { prisma } from "../../../../shared/database/prisma.client";
 import { portUserRepository } from "../../domain/repositories/port.User.Repository";
 import { entUser } from "../../domain/entities/ent.User";
 import { UserMapper } from "../mappers/User.Mapper"; 

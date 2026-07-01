@@ -4,8 +4,8 @@ import path from 'path';
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
-import { errorHandler } from './infrastructure/http/middlewares/error.middleware';
-import userRoutes from './infrastructure/http/routes/user.routes';
+import { errorHandler } from './modules/user/infrastructure/http/middlewares/error.middleware';
+import userRoutes from './modules/user/infrastructure/http/routes/user.routes';
 
 dotenv.config()
 const cors = require('cors')

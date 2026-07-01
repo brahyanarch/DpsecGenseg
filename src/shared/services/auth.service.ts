@@ -1,4 +1,4 @@
-// src/services/auth.service.ts
+// src/shared/services/auth.service.ts
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 

@@ -43,7 +43,7 @@ model User {
   // Llaves foráneas
 
   // Relación con sus roles y oficinas (La tabla intermedia)
-  asignaciones      UsuarioUniversidad[] 
+  perfiles          UsuarioUniversidad[] 
 
   @@map("user")
 }

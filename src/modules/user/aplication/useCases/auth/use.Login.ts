@@ -1,7 +1,7 @@
 // src/application/useCases/auth/use.Login.ts
 import { portUserRepository } from "../../../domain/repositories/port.User.Repository";
-import { comparePassword } from "../../../services/password.service";
-import { generateToken } from "../../../services/auth.service";
+import { comparePassword } from "../../../../../shared/services/password.service";
+import { generateToken } from "../../../../../shared/services/auth.service";
 
 export class useLogin {
     // Inyectamos el repositorio (el puerto)

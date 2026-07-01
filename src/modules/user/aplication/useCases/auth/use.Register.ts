@@ -1,6 +1,6 @@
 // src/application/useCases/auth/use.Register.ts
 import { portUserRepository } from "../../../domain/repositories/port.User.Repository";
-import { hashPassword } from "../../../services/password.service";
+import { hashPassword } from "../../../../../shared/services/password.service";
 import { entUser } from "../../../domain/entities/ent.User";
 import { appError } from "../../../domain/exceptions/app.Error";
 import { errorCatalog } from "../../../domain/exceptions/error.Catalog";

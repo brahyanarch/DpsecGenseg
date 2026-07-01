@@ -1,4 +1,4 @@
-// src/services/password.service.ts
+// src/shared/services/password.service.ts
 import { config } from '../config/env';
 import bcrypt from 'bcrypt';
 
