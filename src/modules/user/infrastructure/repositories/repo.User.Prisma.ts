@@ -11,7 +11,7 @@ export class repoUserPrisma implements portUserRepository {
 
         console.log(`Buscando usuario por email: ${cEmail}`);
         const userDb = await prisma.user.findUnique({
-            where: { cEmail: cEmail },
+            where: { cEmail: cEmail, perfiles: { some: { lVigente: true } } },
             include: {
                 perfiles: { include: { rol: true, oficina: true } }
             }
@@ -63,5 +63,38 @@ export class repoUserPrisma implements portUserRepository {
             }
         });
         return true;
+    }
+
+    public async existsOficina(idOficina: number): Promise<boolean> {
+        const oficina = await prisma.oficina.findUnique({
+            where: { idOficina: idOficina }
+        });
+        return !!oficina; // Retorna true si existe, false si es null
+    }
+
+    public async existsUser(idUser: number): Promise<boolean> {
+        const user = await prisma.user.findUnique({ // Asegúrate del nombre de tu modelo
+            where: { idUser: idUser }
+        });
+        return !!user;
+    }
+
+    public async existsRol(idRol: number): Promise<boolean> {
+        const rol = await prisma.rol.findUnique({
+            where: { idRol: idRol }
+        });
+        return !!rol;
+    }
+
+    public async hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean> {
+        const registro = await prisma.usuarioUniversidad.findFirst({
+            where: { 
+                idUser: idUser,
+                idRol: idRol,
+                idOficina: idOficina,
+                lVigente: true // Este usuario tiene que ser activado pero ya existe en la tabla de Usuarios universidad
+            }
+        });
+        return !!registro;
     }
 }

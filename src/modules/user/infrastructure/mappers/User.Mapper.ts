@@ -1,5 +1,4 @@
 // src/infrastructure/mappers/User.Mapper.ts
-import { User as PrismaUser } from "@prisma/client"; // El modelo de Prisma
 import { entUser } from "../../domain/entities/ent.User";
 
 export class UserMapper {
@@ -14,6 +13,7 @@ export class UserMapper {
                 idRol: a.idRol,
                 cNombreRol: a.rol.cNombreRol,
                 idOficina: a.idOficina,
+                cNombreOficina: a.oficina.cNombreOficina,
                 dExpiresAt: a.dExpiresAt
             }))
         );

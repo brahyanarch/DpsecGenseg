@@ -32,7 +32,9 @@ export class useLogin {
             token, 
             user: { 
                 email: user.getEmail(), 
-                nombre: user.getNombre() 
+                nombre: user.getNombre(),
+                perfiles: user.getPerfiles(),
+                //perfil: user.hasActiveRole(1, "Admin") ? "Admin" : "User" // Ej
             } 
         };
     }

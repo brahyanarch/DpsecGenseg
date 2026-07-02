@@ -5,7 +5,6 @@ export interface Perfil {
     cNombreRol: string;
     idOficina: number;
     cNombreOficina: string;
-    lVigente: boolean;
     dExpiresAt: Date | null;
 }
 
@@ -31,8 +30,11 @@ export class entUser {
         return this._perfiles.some(perfil => 
             perfil.idOficina === idOficina && 
             perfil.cNombreRol === nombreRol &&
-            perfil.lVigente === true &&
             (perfil.dExpiresAt === null || perfil.dExpiresAt > new Date())
         );
+    }
+
+    public getPerfiles(): Perfil[] {
+        return [...this._perfiles]; 
     }
 }

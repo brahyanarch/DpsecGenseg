@@ -37,7 +37,7 @@ model User {
   dDeletedAt         DateTime? // Soft delete
   
   dCreatedAt        DateTime  @default(now())
-  dUpdatedAt        DateTime  @updatedAt
+  dUpdatedAt        DateTime?  @updatedAt
   dLastSignedIn     DateTime  @default(now())
 
   // Llaves foráneas
@@ -57,7 +57,7 @@ model Rol {
   cAbrevRol           String
 
   dCreatedAt       DateTime @default(now())
-  dUpdatedAt       DateTime @updatedAt
+  dUpdatedAt       DateTime? @updatedAt
   
   detallePermisos DetallePermiso[]
   
@@ -84,7 +84,7 @@ model UsuarioUniversidad {
   dExpiresAt     DateTime? 
 
   dCreatedAt      DateTime @default(now())
-  dUpdatedAt      DateTime @updatedAt
+  dUpdatedAt      DateTime? @updatedAt
   
   // Relaciones
   user           User         @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
@@ -111,7 +111,7 @@ model Permiso {
 
   detallePermisos DetallePermiso[]
   
-  @@map("Permiso")
+  @@map("permiso")
 }
 
 model DetallePermiso {
@@ -123,7 +123,7 @@ model DetallePermiso {
   permiso    Permiso @relation(fields: [idPermiso], references: [idPermiso])
   rol        Rol     @relation(fields: [idRol], references: [idRol])
   
-  @@map("DetallePermiso")
+  @@map("detallePermiso")
 }
 
 model Oficina {
@@ -132,7 +132,7 @@ model Oficina {
   cAbrevOficina   String
 
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime? @updatedAt
 
   asignaciones  UsuarioUniversidad[]
   // form          Form[]
