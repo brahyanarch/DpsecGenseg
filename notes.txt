@@ -1,227 +1,91 @@
-{
-  "questions": [
-    {
-      "id": "83356afb-a02b-4ced-92db-6343f16de87e",
-      "type": "singleChoice",
-      "text": "unica",
-      "options": [
-        "opcion unica 1",
-        "opcion unica 2"
-      ]
-    },
-    {
-      "id": "2f26e4c7-b9fe-49af-998c-b3394817949f",
-      "type": "date",
-      "text": "fecha"
-    },
-    {
-      "id": "5fee8f64-553e-42e2-985f-64b3bb524ea7",
-      "type": "dropdown",
-      "text": "desplegable",
-      "options": [
-        "opcion desplegable 1",
-        "opcion desplegable 2"
-      ]
-    },
-    {
-      "id": "836e582e-eac0-49d1-9fd0-62f2408c3435",
-      "type": "archive",
-      "text": "archivo"
-    },
-    {
-      "id": "fb449e5c-3643-4395-ab23-6f91b056ef99",
-      "type": "Number",
-      "text": "numero"
-    },
-    {
-      "id": "f38a835c-7e08-43ac-bcfe-be37444dcea7",
-      "type": "text",
-      "text": "texto"
-    },
-    {
-      "id": "f9f65bce-8d3c-4976-a05e-52bb63610d85",
-      "type": "multipleChoice",
-      "text": "multiple",
-      "options": [
-        "opcion multiple 1",
-        "opcion multiple 2"
-      ]
-    }
-  ]
-}
+/*******************************************************************************************************************************************************
+* Copyright © 2019 CRAC LASA - All rights reserved.
+* 
+* Objetivo            :    Realiza la validación y recuperación de campañas de clientes en base al producto y tipo de operacion operación
+*
+* Escrito por        :    Roy David Acero Zapana
+* Email/Movil/Phone    :    racero@cajalosandes.pe
+*
+* Fecha creación    :    2019/06/10
+*
+* Sistema / Módulo    :    CRE
+*
+* Modificaciones    :
+*    Fecha        Responsable        Descripción del cambio 
+    21/03/2020    RACERO            Se agrega un filtro para la exclusion en los tipos de operacion de REPROGRAMACIÓN
+    08/09/2025    GQUISPE            Se incorpora idTipoGrupoCamp en la selección.
+    15/04/2026    echura            Se optimizan consultas (reemplazo de tabla variable por subquery, materialización de exclusiones, NOLOCK). Sin cambios funcionales.
+* Sintaxis de ejemplo:    
+    
+    EXEC CRE_ValidacionMontoCampana_SP 82265, 1511, 1
+*******************************************************************************************************************************************************/
 
+CREATE PROCEDURE [dbo].[CRE_ValidacionMontoCampana_SP]
+    @idCliente      INT,
+    @idProducto     INT,
+    @idOperacion    INT
+AS
+SET NOCOUNT ON
+BEGIN
+    DECLARE @cListaCampanaExclusionMonto VARCHAR(1000),
+            @cOpeExclusionMontoCampana VARCHAR(1000);
 
-{
-    "preguntas": [
-        {
-            "id": 1,
-            "type": "TEXT",
-            "questionText": "tipo texto",
-            "options": {
-                "multipleChoice": [],
-                "singleChoice": [],
-                "dropdown": []
-            }
-        },
-        {
-            "id": 2,
-            "type": "DROPDOWN",
-            "questionText": "Tipo desplegable",
-            "options": {
-                "multipleChoice": [
-                    {
-                        "id": 1,
-                        "text": "opcion 1 de desplegable"
-                    },
-                    {
-                        "id": 2,
-                        "text": "opcion 2 de desplegable"
-                    }
-                ],
-                "singleChoice": [
-                    {
-                        "id": 1,
-                        "text": "opcion 1 de desplegable"
-                    },
-                    {
-                        "id": 2,
-                        "text": "opcion 2 de desplegable"
-                    }
-                ],
-                "dropdown": [
-                    {
-                        "id": 1,
-                        "text": "opcion 1 de desplegable"
-                    },
-                    {
-                        "id": 2,
-                        "text": "opcion 2 de desplegable"
-                    }
-                ]
-            }
-        },
-        {
-            "id": 3,
-            "type": "DATE",
-            "questionText": "tipo fecha",
-            "options": {
-                "multipleChoice": [],
-                "singleChoice": [],
-                "dropdown": []
-            }
-        },
-        {
-            "id": 4,
-            "type": "SINGLECHOICE",
-            "questionText": "pregunta de tipo unica",
-            "options": {
-                "multipleChoice": [
-                    {
-                        "id": 3,
-                        "text": "opcion 1 de unica"
-                    },
-                    {
-                        "id": 4,
-                        "text": "opcion 2 de unica"
-                    }
-                ],
-                "singleChoice": [
-                    {
-                        "id": 3,
-                        "text": "opcion 1 de unica"
-                    },
-                    {
-                        "id": 4,
-                        "text": "opcion 2 de unica"
-                    }
-                ],
-                "dropdown": [
-                    {
-                        "id": 3,
-                        "text": "opcion 1 de unica"
-                    },
-                    {
-                        "id": 4,
-                        "text": "opcion 2 de unica"
-                    }
-                ]
-            }
-        },
-        {
-            "id": 5,
-            "type": "FILE",
-            "questionText": "tipo archivo",
-            "options": {
-                "multipleChoice": [],
-                "singleChoice": [],
-                "dropdown": []
-            }
-        },
-        {
-            "id": 6,
-            "type": "MULTIPLECHOICE",
-            "questionText": "pregunta de seleccion multiple",
-            "options": {
-                "multipleChoice": [
-                    {
-                        "id": 5,
-                        "text": "opcion 1 de multiple"
-                    },
-                    {
-                        "id": 6,
-                        "text": "opcion 2 de multiple"
-                    }
-                ],
-                "singleChoice": [
-                    {
-                        "id": 5,
-                        "text": "opcion 1 de multiple"
-                    },
-                    {
-                        "id": 6,
-                        "text": "opcion 2 de multiple"
-                    }
-                ],
-                "dropdown": [
-                    {
-                        "id": 5,
-                        "text": "opcion 1 de multiple"
-                    },
-                    {
-                        "id": 6,
-                        "text": "opcion 2 de multiple"
-                    }
-                ]
-            }
-        },
-        {
-            "id": 7,
-            "type": "NUMBER",
-            "questionText": "tipo numero",
-            "options": {
-                "multipleChoice": [],
-                "singleChoice": [],
-                "dropdown": []
-            }
-        }
-    ],
-    "name": "Formulario 1"
-}
+    SELECT @cListaCampanaExclusionMonto = cValVar
+    FROM dbo.SI_FinVariable
+    WHERE cVariable = 'cCampanaExclusionMonto' AND lVigente = 1;
 
+    SELECT @cOpeExclusionMontoCampana = cValVar
+    FROM dbo.SI_FinVariable
+    WHERE cVariable = 'cOpeExclusionMontoCampana' AND lVigente = 1;
 
+    IF EXISTS (
+        SELECT 1
+        FROM dbo.GEN_ConverCadenaTabla_Fn(@cOpeExclusionMontoCampana)
+        WHERE CAST(cValor AS INT) = @idOperacion
+    )
+    BEGIN
+        SELECT TOP (0)
+            0 AS idProducto,
+            0 AS nMontoMaximoPermitido,
+            0 AS idGrupoCamp,
+            CAST(0 AS BIT) AS lPreAprobado,
+            '' AS cGrupoCamp,
+            CAST(0 AS BIT) AS lCampanaPropuesta,
+            '' AS cTipoGrupoCamp;
+        RETURN;
+    END
 
-permisos necesarios
-VER_SUBCONFIGURACION
-VER_FORMULARIOS
-VER_USUARIOS
-VER_PLANILLA_DOCUMENTO
-CONFIG_PAGINA_PRINCIPAL
-CONFIG_CARRUSEL
-CONFIG_AVISOS
-VER_CERTIFICADOS
-VER_ALUMNOS
-VER_TERCEROS
-VER_PLANTILLAS_CERTIFICADOS
-VER_PLANIFICACION
-VER_MIS_PROYECTOS
-VER_PROYECTOS
+    DECLARE @exclusiones TABLE (idGrupoCamp INT PRIMARY KEY);
+    INSERT INTO @exclusiones (idGrupoCamp)
+    SELECT CAST(cValor AS INT)
+    FROM dbo.GEN_ConverCadenaTabla_Fn(@cListaCampanaExclusionMonto);
+
+      SELECT
+          A.idProducto,
+          ISNULL(D.nMonto, 0) AS nMontoMaximoPermitido,
+          A.idGrupoCamp,
+          CAST(ISNULL(A.lPreAprobado, 0) AS BIT) AS lPreAprobado,
+          B.cGrupoCamp,
+          CAST(IIF(D.idDetalle IS NULL, 0, 1) AS BIT) AS lCampanaPropuesta,
+          ISNULL(E.cDescripcion, '') AS cTipoGrupoCamp,
+          D.idTipoGrupoCamp
+      FROM dbo.SI_FinGrupoCampProducto A WITH (NOLOCK)
+      INNER JOIN dbo.SI_FinGrupoCamp B WITH (NOLOCK)
+          ON B.idGrupoCamp = A.idGrupoCamp AND B.lVigente = 1
+      INNER JOIN dbo.SI_FinOpeGrupoCamp C WITH (NOLOCK)
+          ON C.idGrupoCamp = A.idGrupoCamp AND C.idOperacion = @idOperacion
+      LEFT JOIN (
+          SELECT nMonto, idTipoGrupoCamp, idGrupoCamp, idDetalle
+          FROM dbo.SI_FinDetallePreAprobados
+          WHERE idCli = @idCliente AND lVigente = 1 AND nMonto <> 0
+      ) D ON D.idGrupoCamp = A.idGrupoCamp
+      LEFT JOIN dbo.SI_FinTipoGrupoCamp E WITH (NOLOCK)
+          ON E.idTipoGrupoCamp = D.idTipoGrupoCamp AND E.lVigente = 1
+      WHERE A.idProducto = @idProducto
+        AND A.lVigente = 1
+        AND NOT EXISTS (SELECT 1 FROM @exclusiones F WHERE F.idGrupoCamp = A.idGrupoCamp)
+      ORDER BY D.nMonto DESC;
+END
+GO
+GRANT EXECUTE ON [dbo].[CRE_ValidacionMontoCampana_SP] TO [Rol_Fin]
+GO

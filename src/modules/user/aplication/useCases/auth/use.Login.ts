@@ -7,10 +7,10 @@ export class useLogin {
     // Inyectamos el repositorio (el puerto)
     constructor(private readonly _userRepository: portUserRepository) {}
 
-    public async execute(email: string, passwordInput: string) {
+    public async execute(email: string, passwordInput: string, idActiveProfile: number | null) {
         // 1. Obtener usuario del puerto
         const user = await this._userRepository.findByEmail(email);
-        console.log("Usuario encontrado:", user);
+        console.log("Usuario encontrado:", user, "ID de perfil activo solicitado:", idActiveProfile);
         // 2. Validación de seguridad: No revelar si el email no existe
         if (!user) throw new Error("INVALID_CREDENTIALS");
 
@@ -22,10 +22,19 @@ export class useLogin {
             throw new Error("INVALID_CREDENTIALS");
         }
 
+        // validacion de idActiveProfile
+        if (idActiveProfile != null) {
+            const hasActiveProfile = user.verifyProfile(idActiveProfile);
+            if (!hasActiveProfile) {
+                throw new Error("ACTIVE_PROFILE_NOT_FOUND");
+            }
+        }
+
         // 4. Generación de Token
         const token = generateToken({ 
             nId: user.getId(), 
-            cEmail: user.getEmail() 
+            cEmail: user.getEmail(), 
+            idActiveProfile: idActiveProfile
         });
         
         return { 

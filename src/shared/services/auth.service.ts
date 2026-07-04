@@ -5,6 +5,7 @@ import { config } from '../config/env';
 export interface TokenPayload {
     nId: number;
     cEmail: string;
+    idActiveProfile: number | null;
 }
 
 export const generateToken = (payload: TokenPayload): string => {

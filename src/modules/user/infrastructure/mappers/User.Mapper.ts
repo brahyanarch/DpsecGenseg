@@ -14,6 +14,7 @@ export class UserMapper {
                 cNombreRol: a.rol.cNombreRol,
                 idOficina: a.idOficina,
                 cNombreOficina: a.oficina.cNombreOficina,
+                idProfile: a.idUsuarioUni,
                 dExpiresAt: a.dExpiresAt
             }))
         );
@@ -24,6 +25,7 @@ export class UserMapper {
             cEmail: user.getEmail(),
             cPassword: user.getCPassword(),
             cNombre: user.getNombre(),
+            idActiveProfile: user.getIdActiveProfile(),
             // Nota: Si tu tabla 'users' requiere nFailedAttempts por defecto, 
             // agrégalo aquí o deja que Prisma lo gestione si tiene default en el schema.
         };

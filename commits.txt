@@ -1,182 +1,146 @@
-commit 74028c83dc128baf163c4c1eca01616afdd50dd2
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Mon Dec 16 00:23:51 2024 -0500
-
-    arreglando el formuilario proyectos y actividades
-
-commit 2e63a08a7a2a4ade12b38ec8632d869ae584358b
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Fri Dec 13 13:14:57 2024 -0500
-
-    agregando para el projecto
-
-commit 2cfd9fc343b062c4f3e66374371a96b914b550ab
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Wed Dec 11 12:52:19 2024 -0500
-
-    end point de preguntas agregado correctamente
-
-commit a6898d5c4a53278252ece5c071ebe32da69cd277
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Sat Nov 30 17:12:34 2024 -0500
-
-    arreglando las rutas de berning
-
-commit 30593f70fc222b2492be765a30e018aeae411ce6
-Merge: bb570a4 7d5ef15
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Tue Nov 26 18:28:51 2024 -0500
-
-    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
-
-commit bb570a473b7f5c80a27462b425620aaf2b92216c
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Tue Nov 26 18:26:51 2024 -0500
-
-    agregando y corrigiendo el admin general
-
-commit 7d5ef15e0a4104654fdc9fcbaa3a9d4f90e0c74d
-Merge: 04ee610 d014354
-Author: berning <bernardpari2002@gmail.com>
-Date:   Tue Nov 26 18:15:56 2024 -0500
-
-    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
-
-commit 04ee610e8f9c8dbe90c2282d267ffb74e4f84c69
-Author: berning <bernardpari2002@gmail.com>
-Date:   Tue Nov 26 18:14:37 2024 -0500
-
-    Añadiendo API para cambiar el estado de un cliente
-
-commit d014354ca348133c918bef341596faac1d7901c1
-Merge: e69706f 84c514c
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Fri Nov 22 12:04:35 2024 -0500
-
-    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
-
-commit e69706f7d92d2809802ce641c5611352a7b42f33
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Fri Nov 22 12:03:51 2024 -0500
-
-    comentarios
-
-commit c11e7e9e52e080bf3fa8267fe1be2c1a4c2d79e7
-Merge: 558482b 84c514c
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Thu Nov 21 21:26:10 2024 -0500
-
-    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
-    subiendo apis de formulario#
-
-commit 84c514c2620daabd39c1cf9d0b26d34f5c129f40
-Author: berning <bernardpari2002@gmail.com>
-Date:   Thu Nov 21 21:25:29 2024 -0500
-
-    Definiendo mas APIS
-
-commit 558482b384d8d2f014f2ee3248a0ebe836e9fcfd
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Thu Nov 21 21:21:44 2024 -0500
-
-    agregando algunos cambios
-
-commit 8e76f225a0fdfeef6f922a69c9e62bcdb67c1dd1
-Merge: b6d0e04 ea9eb76
-Author: berning <bernardpari2002@gmail.com>
-Date:   Thu Nov 21 19:15:43 2024 -0500
-
-    Merge branch 'baseDatos' of https://github.com/LeninDes/gensegBackend into baseDatos
-
-commit b6d0e0437e601e8f975308018b7900294ba7878b
-Author: berning <bernardpari2002@gmail.com>
-Date:   Thu Nov 21 19:15:32 2024 -0500
-
-    agregando API para formularios
-
-commit ea9eb765775c785320d3d8f393d8ab446dbdb91a
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Thu Nov 21 11:07:31 2024 -0500
-
-    agregando formulario
-
-commit 3a79fefbf3eac53bf895f538b907878f6f02fdaf
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Tue Nov 19 11:21:17 2024 -0500
-
-    Agregando y modificando los subunidades usuarios
-
-commit f426256bbc55d063007125b5a45293c93849aa82
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Tue Oct 29 12:46:57 2024 -0500
-
-    agregando preguntas dinamicas
-
-commit 3672945ba6aaf9c8e4b6bdc890d267d10d90c7cb
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Sun Oct 6 16:18:24 2024 -0500
-
-    Arreglando los privilegios listo para usarse
-
-commit 1ff9f3b3edfd882b739e1a313b808288e0ae6c70
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Tue Oct 1 12:15:48 2024 -0500
-
-    gestor de privilegios aun no terminado
-
-commit cf56c0a8e8fba95353cb878c9a7d84c151ec0599
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Mon Sep 30 14:36:21 2024 -0500
-
-    agregando a prisma los roles
-
-commit 75a054eb8fe7efdb6cab79a5e562f48b3bcad70b
-Author: davidefqon <davidlarotapilco@gmail.com>
-Date:   Mon Sep 30 09:53:53 2024 -0500
-
-    camvios totales
-
-commit de4659f7f0455214f4480f549d092850d25db924
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Fri Sep 27 10:57:06 2024 -0500
-
-    cors
-
-commit e94d54a16244d1d910ede7b0a2774fefa5cd92b2
-Author: Lenin Chura <lenin1alonso@gmail.com>
-Date:   Fri Sep 27 08:00:04 2024 -0500
-
-    Controller Permisos y roles
-
-commit d533a29e1452971adcc84cc5a8a38b0895f2ed69
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Wed Sep 25 11:16:15 2024 -0500
-
-    Cambio Login
-
-commit 7813ee07a75368f4487f4730325672d11f889800
-Merge: 7bcf13c 50c940c
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Wed Sep 25 09:57:31 2024 -0500
-
-    Merge branch 'main' of https://github.com/LeninDes/gensegBackend
-
-commit 7bcf13c1d659fe74dd20d2fd380146ac873b57fa
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Wed Sep 25 09:55:44 2024 -0500
-
-    cambio comparacion de contrasenias
-
-commit 50c940c7ed547876ee2a69598d75f18d67d1ee95
-Author: Lenin Chura / <66321895+LeninDes@users.noreply.github.com>
-Date:   Sun Sep 22 10:11:09 2024 -0500
-
-    Create README.md
-    
-    Configuración .env
-
-commit 7d82bf763213faf468af26f616c5888a6b2c8399
-Author: LeninDes <lenin1alonso@gmail.com>
-Date:   Sun Sep 22 10:03:03 2024 -0500
-
-    V1 backend login
+PAYMENT - ORDER
+info: Program[0]
+      ::1 - 200 "GET /swagger/index.html" [2026-07-04 16:24:44]
+info: Program[0]
+      ::1 - 200 "GET /swagger/v1/swagger.json" [2026-07-04 16:24:44]
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (65ms) [Parameters=[@__idUsuario_0='1'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[cEmailInst]
+      FROM [SI_FinUsuario] AS [s]
+      WHERE [s].[idUsuario] = @__idUsuario_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (40ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[cValVar]
+      FROM [SI_FinVariable] AS [s]
+      WHERE [s].[cVariable] = 'dfechaact' AND [s].[lVigente] = CAST(1 AS bit) AND [s].[idAgencia] = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@__idUsuario_0='1'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idAgencia]
+      FROM [SI_FinUsuario] AS [s]
+      WHERE [s].[idUsuario] = @__idUsuario_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[@__cCodigoCCE_0='0910' (Size = 4) (DbType = AnsiStringFixedLength)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idEntidadCCE], [s].[cNombre], [s].[cCodigoCCE]
+      FROM [SI_FinEntidadCCE] AS [s]
+      WHERE [s].[cCodigoCCE] = @__cCodigoCCE_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (48ms) [Parameters=[@__codigo_0='5422' (Size = 5) (DbType = AnsiString)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idComisionCCE] AS [idComisionCce], [s].[cCodigo], [s].[cCanalAndes], [s].[cTipo], [s].[cOrigen], [s].[cDestino], [s].[dPeriodoInicial], [s].[dPeriodoFinal], [s].[cTipOpeOriginante], [s].[cTipoTransferencia], [s].[cModalidad], [s].[cTipoPersona], [s].[cCanal], [s].[cCodConcepDebito], [s].[cMoneda], [s].[nMontoMin], [s].[nMontoMax], [s].[nComisionVariable], [s].[nComisionVarMin], [s].[nComisionVarMax], [s].[nComisionFija], [s].[cPagadoPor], [s].[idUsuReg], [s].[dFechaRegistro], [s].[lVigente]
+      FROM [SI_FinComisionCCE] AS [s]
+      WHERE [s].[cCodigo] = @__codigo_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@__cCanalCCE_0='90' (Size = 2) (DbType = AnsiString)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCanalCCE], [s].[cCanalCCE], [s].[cCodigo], [s].[lVigente]
+      FROM [SI_FinCanalCCE] AS [s]
+      WHERE [s].[cCodigo] = @__cCanalCCE_0 AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[@__idCanal_0='1'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[cCanal]
+      FROM [SI_FinCanal] AS [s]
+      WHERE [s].[idCanal] = @__idCanal_0 AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (14ms) [Parameters=[@__cNumeroCCI_0='84900500000048394640' (Size = 20) (DbType = AnsiStringFixedLength)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCuenta], [s].[idEstado], [s].[idProducto], [s].[idTipoCuenta], [s].[nMonTasa], [s].[nMontoDeposito], [s].[idMoneda], [s].[idAgencia], [s].[nSaldoDis], [s].[nSaldoCnt] AS [nSaldoContable], [s].[dFechaApertura], [s].[cNumeroCCI], [s].[idCaracteristica] AS [idCaracteristicaCta], [s].[idTipoPersona], [s0].[cProducto]
+      FROM [SI_FinDeposito] AS [s]
+      INNER JOIN [SI_FinProducto] AS [s0] ON [s].[idProducto] = [s0].[IdProducto]
+      WHERE [s].[cNumeroCCI] = @__cNumeroCCI_0 AND [s].[idEstado] = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idTipoOperacion]
+      FROM [SI_FinTipoOperacion] AS [s]
+      WHERE [s].[cTipoOperacion] = 'RETIRO DE TRANSFERENCIA INTERBANCARIA CCE' AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idTipoPago]
+      FROM [SI_FinTipoPago] AS [s]
+      WHERE [s].[cDesTipoPago] = 'TRANSFERENCIA INTERBANCARIA CCE'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (858ms) [Parameters=[@__filter_IdModalidad_0='1' (Nullable = true), @__filter_DFechaOpe_1='07/04/2026' (DbType = Date), @__filter_IdModulo_2='2' (Nullable = true), @__filter_IdEstadoKardex_3='1', @__filter_IdTipoOperacion_4='215' (Nullable = true), @__filter_IdCanal_5='1'], CommandType='Text', CommandTimeout='30']
+      SELECT COALESCE(SUM([s].[nMontoOperacion]), 0.0)
+      FROM [SI_FinKardex] AS [s]
+      INNER JOIN [SI_FinDetalleTransfKardex] AS [s0] ON [s].[IdKardex] = [s0].[idKardex]
+      INNER JOIN (VALUES (CAST(4490 AS int)), (15586)) AS [v]([Value]) ON [s].[idCuenta] = [v].[Value]
+      WHERE [s0].[idModalidadConsultaCCI] = @__filter_IdModalidad_0 AND [s].[dFechaOpe] = @__filter_DFechaOpe_1 AND [s].[idModulo] = @__filter_IdModulo_2 AND [s].[idEstadoKardex] = @__filter_IdEstadoKardex_3 AND [s0].[idTipoOperacion] = @__filter_IdTipoOperacion_4 AND [s].[idCanal] = @__filter_IdCanal_5
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (123ms) [Parameters=[@__idCuenta_0='483946'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCuenta], [s].[idBloqueo], [s].[idCaracteristicaBloq], [s0].[idTipoOperacion]
+      FROM [SI_FINBloqueoCuenta] AS [s]
+      INNER JOIN [SI_FinCaracteristicaBloq] AS [s0] ON [s].[idCaracteristicaBloq] = [s0].[idCaracteristicaBloq]
+      WHERE [s].[idCuenta] = @__idCuenta_0 AND [s].[lBloqueado] = CAST(1 AS bit) AND [s].[lvigente] = CAST(1 AS bit) AND [s0].[lEstado] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idConcepto], [s].[cConcepto], [s].[cNombreCorto], [s].[idGrupoCon], [s].[lAplicaContable], [s].[lVigente], [s].[nOrden]
+      FROM [SI_FinConcepto] AS [s]
+      WHERE [s].[cNombreCorto] = 'Com.Transf.CCE.Bco.Dest' AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[cValVar]
+      FROM [SI_FinVariable] AS [s]
+      WHERE [s].[cVariable] = 'lRetiroCTS100' AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (37ms) [Parameters=[@__idCuenta_0='483946'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCuenta], [s].[cDescripcionCta], [s].[cDireccionEnvioEstCta], [s].[cNroCuenta], [s].[cNumeroCCI], [s].[cRucEmpleador], [s].[dFecCapitalizacion], [s].[dFecUltMov], [s].[dFechaApertura], [s].[dFechaAperturaIni], [s].[dFechaAtencion], [s].[dFechaCancelacion], [s].[dFechaDevengado], [s].[idAgencia], [s].[idCanalRegistro], [s].[idCaracteristica], [s].[idCuentaCreditoApertura], [s].[idCuentaRel], [s].[idEstado], [s].[idModoDesembolsoCli], [s].[idMoneda], [s].[idMotivoAnulacionDep], [s].[idObjetoAho], [s].[idOrigenFondo], [s].[idPagoInt], [s].[idProducto], [s].[idRenovacion], [s].[idSolicitudCre], [s].[idTasa], [s].[idTipoCuenta], [s].[idTipoEnvioEstCta], [s].[idTipoFirma], [s].[idTipoPersona], [s].[idTipoTasa], [s].[idUsuAsig], [s].[idUsuAtiende], [s].[idUsuario], [s].[idUsuarioqBlo], [s].[lAlertaSms], [s].[lCuentaDepositoAutomatico], [s].[lInactiva], [s].[lIndGarantia], [s].[lIsAfectoITF], [s].[lIsCtaOrdPago], [s].[lisBloqCta], [s].[nDiaPagoInt], [s].[nDiasExecPenCuenta], [s].[nIntDevTmp], [s].[nInteresGen], [s].[nInteresPag], [s].[nMonIntDev], [s].[nMonIntTot], [s].[nMonTasa], [s].[nMonTotBloq], [s].[nMontoApeIni], [s].[nMontoApertura], [s].[nMontoDeposito], [s].[nNroImpresionExtCta], [s].[nNumeCertificado], [s].[nNumeroFirmas], [s].[nPlazoCta], [s].[nPlazoMeses], [s].[nRevisadoChecklist], [s].[nSaldoCnt], [s].[nSaldoDis], [s].[nSaldoMinimo], [s].[nTasaCancelacion]
+      FROM [SI_FinDeposito] AS [s]
+      WHERE [s].[idCuenta] = @__idCuenta_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (11ms) [Parameters=[@__idCuenta_0='483946'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCuenta], [s].[idEmpleador], [s].[idEntidad], [s].[nMontoDisp], [s].[nMontoIntangible]
+      FROM [SI_FinDepositoCTS] AS [s]
+      WHERE [s].[idCuenta] = @__idCuenta_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (35ms) [Parameters=[@__idCuenta_0='483946'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idCuenta], [s].[dFechaCulminacion], [s].[idBonificacion], [s].[idCtaDebitoPrg], [s].[idEstadoCta], [s].[idMotivo], [s].[idPlanPagos], [s].[lBeneficio], [s].[lCmpContrato], [s].[lDebito], [s].[lVigente], [s].[nDiasAtrazo], [s].[nMesGracia], [s].[nMonAdelantado], [s].[nMonTotProg], [s].[nMontoCuota], [s].[nNroDepos], [s].[nNumDepPag]
+      FROM [SI_FinDepositoPRG] AS [s]
+      WHERE [s].[idCuenta] = @__idCuenta_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[@__cNombreVariable_0='nITF' (Size = 50) (DbType = AnsiString)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idVariable], [s].[cVariable], [s].[cDescripcion], [s].[cTipoVariable], [s].[cValVar], [s].[lVigente], [s].[idAgencia]
+      FROM [SI_FinVariable] AS [s]
+      WHERE [s].[cVariable] = @__cNombreVariable_0 AND [s].[lVigente] = CAST(1 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (22ms) [Parameters=[@__codigo_0='O' (Size = 4) (DbType = AnsiString)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idAmbitoTransferencia]
+      FROM [SI_FinAmbitoTransferencia] AS [s]
+      WHERE [s].[cNombreCorto] = @__codigo_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (14,752ms) [Parameters=[@__8__locals1_transactionId_0='2026070411242508497290000277' (Size = 35) (DbType = AnsiString)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [SI_FinDetalleTransfKardex] AS [s]
+              WHERE [s].[cCodigoOperacion] = @__8__locals1_transactionId_0) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (15ms) [Parameters=[p0='483946'], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(2) [c].[idCuenta], [c].[cDescripcionCta], [c].[cDireccionEnvioEstCta], [c].[cNroCuenta], [c].[cNumeroCCI], [c].[cRucEmpleador], [c].[dFecCapitalizacion], [c].[dFecUltMov], [c].[dFechaApertura], [c].[dFechaAperturaIni], [c].[dFechaAtencion], [c].[dFechaCancelacion], [c].[dFechaDevengado], [c].[idAgencia], [c].[idCanalRegistro], [c].[idCaracteristica], [c].[idCuentaCreditoApertura], [c].[idCuentaRel], [c].[idEstado], [c].[idModoDesembolsoCli], [c].[idMoneda], [c].[idMotivoAnulacionDep], [c].[idObjetoAho], [c].[idOrigenFondo], [c].[idPagoInt], [c].[idProducto], [c].[idRenovacion], [c].[idSolicitudCre], [c].[idTasa], [c].[idTipoCuenta], [c].[idTipoEnvioEstCta], [c].[idTipoFirma], [c].[idTipoPersona], [c].[idTipoTasa], [c].[idUsuAsig], [c].[idUsuAtiende], [c].[idUsuario], [c].[idUsuarioqBlo], [c].[lAlertaSms], [c].[lCuentaDepositoAutomatico], [c].[lInactiva], [c].[lIndGarantia], [c].[lIsAfectoITF], [c].[lIsCtaOrdPago], [c].[lisBloqCta], [c].[nDiaPagoInt], [c].[nDiasExecPenCuenta], [c].[nIntDevTmp], [c].[nInteresGen], [c].[nInteresPag], [c].[nMonIntDev], [c].[nMonIntTot], [c].[nMonTasa], [c].[nMonTotBloq], [c].[nMontoApeIni], [c].[nMontoApertura], [c].[nMontoDeposito], [c].[nNroImpresionExtCta], [c].[nNumeCertificado], [c].[nNumeroFirmas], [c].[nPlazoCta], [c].[nPlazoMeses], [c].[nRevisadoChecklist], [c].[nSaldoCnt], [c].[nSaldoDis], [c].[nSaldoMinimo], [c].[nTasaCancelacion]
+      FROM (
+ 
+                              SELECT *
+                              FROM SI_FinDeposito WITH (UPDLOCK, ROWLOCK)
+                              WHERE IdCuenta = @p0
+ 
+      ) AS [c]
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (35ms) [Parameters=[@p3='483946', @p0='2026-07-04T00:00:00.0000000' (Nullable = true) (DbType = DateTime), @p1='9963545.11' (Nullable = true) (Precision = 14) (Scale = 2), @p2='9963545.11' (Nullable = true) (Precision = 14) (Scale = 2)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      UPDATE [SI_FinDeposito] SET [dFecUltMov] = @p0, [nMontoDeposito] = @p1, [nSaldoDis] = @p2
+      OUTPUT 1
+      WHERE [idCuenta] = @p3;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (355ms) [Parameters=[@__data_CCodigoOperacion_0='2026070411242508497290000277' (Size = 35) (DbType = AnsiString), @__idTipoOperacion_1='215' (Nullable = true)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[idEstConsultaCCE], [s].[cCodigoEstado], [s].[cCodigoOperacion], [s].[cCodigoRechazado], [s].[cDocumentoID], [s].[cNumeroCCIDestino], [s].[cNumeroCCIOrigen], [s].[cNumeroCelDestino], [s].[dFechaHoraOpe], [s].[idAmbitoTransferencia], [s].[idCanal], [s].[idEntidadOperacion], [s].[idModalidadConsultaCCI], [s].[idMoneda], [s].[idTipoOperacion], [s].[lRechazadoCCE], [s].[lVigente]
+      FROM [SI_FinEstConsultaCCE] AS [s]
+      WHERE [s].[cCodigoOperacion] = @__data_CCodigoOperacion_0 AND [s].[idTipoOperacion] = @__idTipoOperacion_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (15ms) [Parameters=[@p2='183350', @p0='84900500000048394640' (Size = 20) (DbType = AnsiStringFixedLength), @p1='2' (Nullable = true)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      UPDATE [SI_FinEstConsultaCCE] SET [cNumeroCCIOrigen] = @p0, [idAmbitoTransferencia] = @p1
+      OUTPUT 1
+      WHERE [idEstConsultaCCE] = @p2;
+info: KafkaEmitterService.Commands.MyProducerCommand[0]
+      [2026070411242508497290000277] Kafka enviado correctamente. Topic: confirmar-orden-transferencia, Partition: [0], Offset: 1852
+info: Program[0]
+      ::1 - 200 "POST /payment-order-s/v1/external-transfers/create" [2026-07-04 16:25:22]
