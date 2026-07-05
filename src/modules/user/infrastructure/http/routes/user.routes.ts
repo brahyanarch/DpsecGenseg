@@ -10,5 +10,7 @@ const authController = new AuthController();
 router.post("/login", authController.login);
 router.post("/register", validateUserRegister, authController.register);
 router.post("/assign-role", authController.assignRole);
+router.patch("/users/:idUser/status", authController.updateUserStatus);
+router.patch("/profiles/:idUsuarioUni/vigente", authController.updateProfileVigency);
 
 export default router;

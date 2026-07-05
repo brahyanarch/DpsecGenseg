@@ -9,7 +9,11 @@ export interface portUserRepository {
     findById(id: number): Promise<entUser | null>;
     save(user: entUser): Promise<void>;
     updateFailedAttempts(id: number, attempts: number, date: Date | null): Promise<void>;
+    updateUserStatus(idUser: number, lActivo: boolean): Promise<void>;
+    updateProfileVigency(idUsuarioUni: number, lVigente: boolean): Promise<void>;
     existsUser(idUser: number): Promise<boolean>;
+    existsUserById(idUser: number): Promise<boolean>;
+    existsProfile(idUsuarioUni: number): Promise<boolean>;
     existsRol(idRol: number): Promise<boolean>;
     existsOficina(idOficina: number): Promise<boolean>;
     hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean>;

@@ -52,6 +52,21 @@ export class repoUserPrisma implements portUserRepository {
         });
     }
 
+    async updateUserStatus(idUser: number, lActivo: boolean): Promise<void> {
+        console.log(`Actualizando estado del usuario con ID ${idUser} a lActivo=${lActivo}`);
+        await prisma.user.update({
+            where: { idUser },
+            data: { lActivo }
+        });
+    }
+
+    async updateProfileVigency(idUsuarioUni: number, lVigente: boolean): Promise<void> {
+        await prisma.usuarioUniversidad.update({
+            where: { idUsuarioUni },
+            data: { lVigente }
+        });
+    }
+
     async assignRole(data: AssignRoleDTO): Promise<boolean | null> {
         await prisma.usuarioUniversidad.create({
             data: {
@@ -66,17 +81,33 @@ export class repoUserPrisma implements portUserRepository {
 
     public async existsOficina(idOficina: number): Promise<boolean> {
         const oficina = await prisma.oficina.findUnique({
-            where: { idOficina: idOficina, lActivo: true, lVigente: true }
+            where: { idOficina: idOficina, lVigente: true }
         });
         return !!oficina; // Retorna true si existe, false si es null
     }
 
     public async existsUser(idUser: number): Promise<boolean> {
         const user = await prisma.user.findUnique({ // Asegúrate del nombre de tu modelo
-            where: { idUser: idUser, lActivo: true, lVigente: true }
+            where: { idUser: idUser, lVigente: true }
         });
 
         return !!user;
+    }
+
+    public async existsUserById(idUser: number): Promise<boolean> {
+        const user = await prisma.user.findFirst({
+            where: { idUser: idUser, lVigente: true }
+        });
+
+        return !!user;
+    }
+
+    public async existsProfile(idUsuarioUni: number): Promise<boolean> {
+        const profile = await prisma.usuarioUniversidad.findUnique({
+            where: { idUsuarioUni: idUsuarioUni }
+        });
+
+        return !!profile;
     }
 
     public async existsRol(idRol: number): Promise<boolean> {
