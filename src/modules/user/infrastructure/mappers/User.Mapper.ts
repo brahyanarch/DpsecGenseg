@@ -25,7 +25,7 @@ export class UserMapper {
             cEmail: user.getEmail(),
             cPassword: user.getCPassword(),
             cNombre: user.getNombre(),
-            idActiveProfile: user.getIdActiveProfile(),
+            // idActiveProfile: user.getIdActiveProfile(),
             // Nota: Si tu tabla 'users' requiere nFailedAttempts por defecto, 
             // agrégalo aquí o deja que Prisma lo gestione si tiene default en el schema.
         };

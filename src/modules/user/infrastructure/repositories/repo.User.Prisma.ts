@@ -9,7 +9,7 @@ export class repoUserPrisma implements portUserRepository {
     
     async findByEmail(cEmail: string): Promise<entUser | null> {
 
-        console.log(`Buscando usuario por email: ${cEmail}`);
+        //console.log(`Buscando usuario por email: ${cEmail}`);
         const userDb = await prisma.user.findUnique({
             where: { cEmail: cEmail, perfiles: { some: { lVigente: true } } },
             include: {
@@ -17,7 +17,7 @@ export class repoUserPrisma implements portUserRepository {
             }
         });
 
-        console.log("Resultado de la consulta a la base de datos:", userDb);
+        //console.log("Resultado de la consulta a la base de datos:", userDb);
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
@@ -38,7 +38,7 @@ export class repoUserPrisma implements portUserRepository {
         // 1. Convertimos la Entidad a un formato que Prisma entienda
         // (Esto debería estar en tu UserMapper)
         const userData = UserMapper.toPersistence(user);
-        
+        console.log("Datos a guardar en la base de datos:", userData);
         // 2. Guardamos en la base de datos
         await prisma.user.create({
             data: userData

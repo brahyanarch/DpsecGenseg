@@ -34,6 +34,7 @@ export class AuthController {
     public register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const { cEmail, cPassword, cNombre } = req.body;
+            console.log("Datos recibidos para registro:", { cEmail, cPassword, cNombre });
             const result = await this._registerUseCase.execute(cEmail, cPassword, cNombre);
 
             res.status(201).json({ nSuccess: true, data: result });

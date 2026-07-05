@@ -20,7 +20,7 @@ app.use(cors());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(errorHandler);
-app.use('/v1_001/auth', userRoutes);
+app.use('/v1/auth', userRoutes);
 app.use(errorHandler);
 
 export default app;
