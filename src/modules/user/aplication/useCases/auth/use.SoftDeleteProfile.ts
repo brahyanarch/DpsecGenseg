@@ -1,16 +1,12 @@
 import { appError } from "../../../domain/exceptions/app.Error";
 import { portUserRepository } from "../../../domain/repositories/port.User.Repository";
 
-export class useUpdateProfileVigency {
+export class useSoftDeleteProfile {
     constructor(private readonly _userRepo: portUserRepository) {}
 
-    async execute(idUsuarioUni: number, lVigente: boolean): Promise<void> {
+    async execute(idUsuarioUni: number): Promise<void> {
         if (!Number.isInteger(idUsuarioUni) || idUsuarioUni <= 0) {
             throw new appError("40001", "INVALID_FIELD", "idUsuarioUni", true);
-        }
-
-        if (typeof lVigente !== "boolean") {
-            throw new appError("40001", "INVALID_FIELD", "lVigente", true);
         }
 
         const profileExists = await this._userRepo.existsProfile(idUsuarioUni);
@@ -18,6 +14,6 @@ export class useUpdateProfileVigency {
             throw new appError("40402", "Perfil no encontrado", "idUsuarioUni", true);
         }
 
-        await this._userRepo.updateProfileVigency(idUsuarioUni, lVigente);
+        await this._userRepo.softDeleteProfile(idUsuarioUni);
     }
 }

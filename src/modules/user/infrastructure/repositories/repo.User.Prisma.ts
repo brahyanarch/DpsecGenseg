@@ -12,7 +12,7 @@ export class repoUserPrisma implements portUserRepository {
 
         //console.log(`Buscando usuario por email: ${cEmail}`);
         const userDb = await prisma.user.findUnique({
-            where: { cEmail: cEmail, perfiles: { some: { lVigente: true, lActivo: true } } },
+            where: { cEmail: cEmail, lVigente: true },
             include: {
                 perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
             }
@@ -53,17 +53,51 @@ export class repoUserPrisma implements portUserRepository {
     }
 
     async updateUserStatus(idUser: number, lActivo: boolean): Promise<void> {
-        console.log(`Actualizando estado del usuario con ID ${idUser} a lActivo=${lActivo}`);
         await prisma.user.update({
             where: { idUser },
             data: { lActivo }
         });
     }
 
-    async updateProfileVigency(idUsuarioUni: number, lVigente: boolean): Promise<void> {
+    async updateProfileStatus(idUsuarioUni: number, lActivo: boolean): Promise<void> {
         await prisma.usuarioUniversidad.update({
             where: { idUsuarioUni },
-            data: { lVigente }
+            data: { lActivo }
+        });
+    }
+
+    async softDeleteUser(idUser: number): Promise<void> {
+        const user = await prisma.user.findUnique({
+            where: { idUser }
+        });
+
+        if (!user) return;
+
+        const deletedAt = new Date();
+        const deletedAtLabel = deletedAt.toISOString().replace(/[:.]/g, "-");
+        const deletedEmail = `${user.cEmail}__deleted_${deletedAtLabel}_${idUser}`;
+
+        await prisma.$transaction([
+            prisma.usuarioUniversidad.updateMany({
+                where: { idUser },
+                data: { lActivo: false, lVigente: false }
+            }),
+            prisma.user.update({
+                where: { idUser },
+                data: {
+                    cEmail: deletedEmail,
+                    lActivo: false,
+                    lVigente: false,
+                    dDeletedAt: deletedAt
+                }
+            })
+        ]);
+    }
+
+    async softDeleteProfile(idUsuarioUni: number): Promise<void> {
+        await prisma.usuarioUniversidad.update({
+            where: { idUsuarioUni },
+            data: { lActivo: false, lVigente: false }
         });
     }
 
@@ -103,8 +137,8 @@ export class repoUserPrisma implements portUserRepository {
     }
 
     public async existsProfile(idUsuarioUni: number): Promise<boolean> {
-        const profile = await prisma.usuarioUniversidad.findUnique({
-            where: { idUsuarioUni: idUsuarioUni }
+        const profile = await prisma.usuarioUniversidad.findFirst({
+            where: { idUsuarioUni: idUsuarioUni, lVigente: true }
         });
 
         return !!profile;

@@ -16,7 +16,9 @@ export class UserMapper {
                 cNombreOficina: a.oficina.cNombreOficina,
                 idProfile: a.idUsuarioUni,
                 dExpiresAt: a.dExpiresAt
-            }))
+            })),
+            raw.lVigente,
+            raw.lActivo
         );
     }
 

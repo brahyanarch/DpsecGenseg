@@ -5,7 +5,9 @@ import { useLogin } from "../../../aplication/useCases/auth/use.Login";
 import { useRegister } from "../../../aplication/useCases/auth/use.Register";
 import { useAssignRole } from "../../../aplication/useCases/auth/use.AssignRole";
 import { useUpdateUserStatus } from "../../../aplication/useCases/auth/use.UpdateUserStatus";
-import { useUpdateProfileVigency } from "../../../aplication/useCases/auth/use.UpdateProfileVigency";
+import { useUpdateProfileStatus } from "../../../aplication/useCases/auth/use.UpdateProfileStatus";
+import { useSoftDeleteUser } from "../../../aplication/useCases/auth/use.SoftDeleteUser";
+import { useSoftDeleteProfile } from "../../../aplication/useCases/auth/use.SoftDeleteProfile";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
 
 export class AuthController {
@@ -14,7 +16,9 @@ export class AuthController {
     private readonly _registerUseCase: useRegister;
     private readonly _assignRoleUseCase: useAssignRole;
     private readonly _updateUserStatusUseCase: useUpdateUserStatus;
-    private readonly _updateProfileVigencyUseCase: useUpdateProfileVigency;
+    private readonly _updateProfileStatusUseCase: useUpdateProfileStatus;
+    private readonly _softDeleteUserUseCase: useSoftDeleteUser;
+    private readonly _softDeleteProfileUseCase: useSoftDeleteProfile;
 
     constructor() {
         // Centralizamos la creación de dependencias aquí
@@ -23,7 +27,9 @@ export class AuthController {
         this._registerUseCase = new useRegister(userRepo);
         this._assignRoleUseCase = new useAssignRole(userRepo);
         this._updateUserStatusUseCase = new useUpdateUserStatus(userRepo);
-        this._updateProfileVigencyUseCase = new useUpdateProfileVigency(userRepo);
+        this._updateProfileStatusUseCase = new useUpdateProfileStatus(userRepo);
+        this._softDeleteUserUseCase = new useSoftDeleteUser(userRepo);
+        this._softDeleteProfileUseCase = new useSoftDeleteProfile(userRepo);
     }
 
     public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -64,7 +70,7 @@ export class AuthController {
     public updateUserStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const idUser = Number(req.params.idUser);
-            const lActivo = Boolean(req.body.lActivo);
+            const { lActivo } = req.body;
 
             await this._updateUserStatusUseCase.execute(idUser, lActivo);
 
@@ -74,14 +80,38 @@ export class AuthController {
         }
     };
 
-    public updateProfileVigency = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    public updateProfileStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const idUsuarioUni = Number(req.params.idUsuarioUni);
-            const { lVigente } = req.body;
+            const { lActivo } = req.body;
 
-            await this._updateProfileVigencyUseCase.execute(idUsuarioUni, lVigente);
+            await this._updateProfileStatusUseCase.execute(idUsuarioUni, lActivo);
 
-            res.status(200).json({ nSuccess: true, cMessage: "Vigencia del perfil actualizada correctamente" });
+            res.status(200).json({ nSuccess: true, cMessage: "Estado del perfil actualizado correctamente" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public softDeleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const idUser = Number(req.params.idUser);
+
+            await this._softDeleteUserUseCase.execute(idUser);
+
+            res.status(200).json({ nSuccess: true, cMessage: "Usuario eliminado correctamente" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public softDeleteProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const idUsuarioUni = Number(req.params.idUsuarioUni);
+
+            await this._softDeleteProfileUseCase.execute(idUsuarioUni);
+
+            res.status(200).json({ nSuccess: true, cMessage: "Perfil eliminado correctamente" });
         } catch (error) {
             next(error);
         }

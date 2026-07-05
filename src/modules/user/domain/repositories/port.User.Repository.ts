@@ -10,7 +10,9 @@ export interface portUserRepository {
     save(user: entUser): Promise<void>;
     updateFailedAttempts(id: number, attempts: number, date: Date | null): Promise<void>;
     updateUserStatus(idUser: number, lActivo: boolean): Promise<void>;
-    updateProfileVigency(idUsuarioUni: number, lVigente: boolean): Promise<void>;
+    updateProfileStatus(idUsuarioUni: number, lActivo: boolean): Promise<void>;
+    softDeleteUser(idUser: number): Promise<void>;
+    softDeleteProfile(idUsuarioUni: number): Promise<void>;
     existsUser(idUser: number): Promise<boolean>;
     existsUserById(idUser: number): Promise<boolean>;
     existsProfile(idUsuarioUni: number): Promise<boolean>;

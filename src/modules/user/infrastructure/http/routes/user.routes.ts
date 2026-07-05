@@ -11,6 +11,8 @@ router.post("/login", authController.login);
 router.post("/register", validateUserRegister, authController.register);
 router.post("/assign-role", authController.assignRole);
 router.patch("/users/:idUser/status", authController.updateUserStatus);
-router.patch("/profiles/:idUsuarioUni/vigente", authController.updateProfileVigency);
+router.delete("/users/:idUser", authController.softDeleteUser);
+router.patch("/profiles/:idUsuarioUni/status", authController.updateProfileStatus);
+router.delete("/profiles/:idUsuarioUni", authController.softDeleteProfile);
 
 export default router;
