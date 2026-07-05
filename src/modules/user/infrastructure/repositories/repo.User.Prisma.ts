@@ -4,6 +4,7 @@ import { portUserRepository } from "../../domain/repositories/port.User.Reposito
 import { entUser } from "../../domain/entities/ent.User";
 import { UserMapper } from "../mappers/User.Mapper"; 
 import { AssignRoleDTO } from "../http/dto/dto.AssignRole";
+import { appError } from "../../domain/exceptions/app.Error";
 
 export class repoUserPrisma implements portUserRepository {
     
@@ -11,26 +12,25 @@ export class repoUserPrisma implements portUserRepository {
 
         //console.log(`Buscando usuario por email: ${cEmail}`);
         const userDb = await prisma.user.findUnique({
-            where: { cEmail: cEmail, perfiles: { some: { lVigente: true } } },
+            where: { cEmail: cEmail, perfiles: { some: { lVigente: true, lActivo: true } } },
             include: {
-                perfiles: { include: { rol: true, oficina: true } }
+                perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
             }
         });
-
         //console.log("Resultado de la consulta a la base de datos:", userDb);
+
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
-    // AÑADE ESTE MÉTODO QUE TE ESTÁ PIDIENDO TYPESCRIPT:
     async findById(id: number): Promise<entUser | null> {
-        console.log(`Buscando usuario por ID: ${id}`);
+        //console.log(`Buscando usuario por ID: ${id}`);
         const userDb = await prisma.user.findUnique({
-            where: { idUser: id },
+            where: { idUser: id, lActivo: true, lVigente: true },
             include: {
-                perfiles: { include: { rol: true, oficina: true } }
+                perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
             }
         });
-        console.log("Resultado de la consulta a la base de datos:", userDb);
+        //console.log("Resultado de la consulta a la base de datos:", userDb);
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
@@ -38,7 +38,7 @@ export class repoUserPrisma implements portUserRepository {
         // 1. Convertimos la Entidad a un formato que Prisma entienda
         // (Esto debería estar en tu UserMapper)
         const userData = UserMapper.toPersistence(user);
-        console.log("Datos a guardar en la base de datos:", userData);
+        //console.log("Datos a guardar en la base de datos:", userData);
         // 2. Guardamos en la base de datos
         await prisma.user.create({
             data: userData
@@ -58,7 +58,6 @@ export class repoUserPrisma implements portUserRepository {
                 idUser: data.idUser,
                 idRol: data.idRol,
                 idOficina: data.idOficina,
-                lVigente: true, // Por defecto al asignar
                 dExpiresAt: data.dExpiresAt || null,
             }
         });
@@ -67,32 +66,37 @@ export class repoUserPrisma implements portUserRepository {
 
     public async existsOficina(idOficina: number): Promise<boolean> {
         const oficina = await prisma.oficina.findUnique({
-            where: { idOficina: idOficina }
+            where: { idOficina: idOficina, lActivo: true, lVigente: true }
         });
         return !!oficina; // Retorna true si existe, false si es null
     }
 
     public async existsUser(idUser: number): Promise<boolean> {
         const user = await prisma.user.findUnique({ // Asegúrate del nombre de tu modelo
-            where: { idUser: idUser }
+            where: { idUser: idUser, lActivo: true, lVigente: true }
         });
+
         return !!user;
     }
 
     public async existsRol(idRol: number): Promise<boolean> {
         const rol = await prisma.rol.findUnique({
-            where: { idRol: idRol }
+            where: { idRol: idRol, lActivo:true, lVigente:true }
         });
+
         return !!rol;
     }
 
     public async hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean> {
-        const registro = await prisma.usuarioUniversidad.findFirst({
+        const registro = await prisma.usuarioUniversidad.findUnique({
             where: { 
-                idUser: idUser,
-                idRol: idRol,
-                idOficina: idOficina,
-                lVigente: true // Este usuario tiene que ser activado pero ya existe en la tabla de Usuarios universidad
+                unique_usuario_rol_oficina: {
+                    idUser: idUser,
+                    idRol: idRol,
+                    idOficina: idOficina
+                },
+                lActivo: true,
+                lVigente: true
             }
         });
         return !!registro;

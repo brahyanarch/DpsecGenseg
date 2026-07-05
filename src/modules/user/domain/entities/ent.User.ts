@@ -16,7 +16,11 @@ export class entUser {
         private readonly _cPassword: string | null,
         private readonly _cNombre: string | null,
         private readonly _perfiles: Perfil[],
-        private readonly _idActiveProfile: number | null = null
+        private readonly _idActiveProfile: number | null = null,
+        private readonly _lVigente: boolean = true,
+        private readonly _lActivo: boolean = true,
+        private readonly _nFailedAttempts: number = 0,
+        private readonly _dLastFailedAttempt: Date | null = null
     ) {}
 
     // ESTÁNDAR: Métodos de acceso (Getters explícitos)
@@ -25,6 +29,8 @@ export class entUser {
     public getNombre(): string | null { return this._cNombre; }
     public getCPassword(): string | null { return this._cPassword; }
     public getIdActiveProfile(): number | null { return this._idActiveProfile; }
+    public isVigente(): boolean { return this._lVigente; }
+    public isActivo(): boolean { return this._lActivo; }
     public verifyProfile(_paramidActiveProfile: number | null): boolean { 
         return this._perfiles.some(perfil => perfil.idProfile === _paramidActiveProfile);
     }

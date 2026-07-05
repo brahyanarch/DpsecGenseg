@@ -2,6 +2,7 @@
 import { portUserRepository } from "../../../domain/repositories/port.User.Repository";
 import { comparePassword } from "../../../../../shared/services/password.service";
 import { generateToken } from "../../../../../shared/services/auth.service";
+import { appError } from "../../../domain/exceptions/app.Error";
 
 export class useLogin {
     // Inyectamos el repositorio (el puerto)
@@ -12,21 +13,24 @@ export class useLogin {
         const user = await this._userRepository.findByEmail(email);
         console.log("Usuario encontrado:", user, "ID de perfil activo solicitado:", idActiveProfile);
         // 2. Validación de seguridad: No revelar si el email no existe
-        if (!user) throw new Error("INVALID_CREDENTIALS");
+        if (!user) throw new appError("54003", "INVALID_CREDENTIALS", "Invalid credentials", false);
+        if ( user.isVigente() === false || user.isActivo() === false) {
+            throw new appError( "54004","USER_INACTIVE", "User inactive", false);
+        }
 
         // 3. Verificación de password
         const passwordMatch = await comparePassword(passwordInput, user.getCPassword() || "");
         if (!passwordMatch) {
             // Aquí llamarías a un método para registrar el intento fallido
             // await this._userRepository.updateFailedAttempts(user.getId(), ...);
-            throw new Error("INVALID_CREDENTIALS");
+            throw new appError("54003", "INVALID_CREDENTIALS", "Invalid credentials", false);
         }
 
         // validacion de idActiveProfile
         if (idActiveProfile != null) {
             const hasActiveProfile = user.verifyProfile(idActiveProfile);
             if (!hasActiveProfile) {
-                throw new Error("ACTIVE_PROFILE_NOT_FOUND");
+                throw new appError("54005", "ACTIVE_PROFILE_NOT_FOUND", "Active profile not found", false);
             }
         }
 

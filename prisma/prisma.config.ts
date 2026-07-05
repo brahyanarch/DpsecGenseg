@@ -1,10 +1,9 @@
-/// <reference types="node" />
-import "dotenv/config";
-import { defineConfig } from "@prisma/config";
+// prisma/prisma.config.ts
+import { defineConfig } from '@prisma/config';
+import 'dotenv/config'; // Esto carga tu archivo .env automáticamente
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
   datasource: {
-    url: process.env.POSTGRESDB_URL,
+    url: process.env.POSTGRESDB_URL, // Asegúrate de que este nombre coincida con tu .env
   },
 });

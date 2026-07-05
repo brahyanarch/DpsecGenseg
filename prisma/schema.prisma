@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -14,27 +15,31 @@ datasource db {
 }
 
 // ==========================================
-// 1. TABLA PRINCIPAL DE USUARIOS (Fusión de User y DatosUsuario)
+// 1. TABLA PRINCIPAL DE USUARIOS 
 // ==========================================
 model User {
   idUser            Int       @id @default(autoincrement())
   
   // Datos de autenticación
-  cOpenId           String?   @unique // Opcional, para login con Google/Microsoft
+  cOpenId           String?   // Opcional, para login con Google/Microsoft
   cEmail            String    @unique
   cPassword         String?   // Contraseña (si se loguea manual)
   cLoginMethod      String?   // Ej: 'LOCAL', 'GOOGLE'
+  lActivo           Boolean   @default(true) // lActivo indica si el usuario está activo esto hace que pueda desactivar todos sus perfiles de universidad y no pueda loguearse
 
   // Datos personales
   cDni              String?   @db.Char(8) @unique
   cNombre           String?
   cAPaterno         String?
   cAMaterno         String?
+
+  // Datos de vigencia
+  lVigente          Boolean   @default(true) // lVigente solo se usa para soft delete
   
   // Control de seguridad y auditoría
   dLastFailedAttempt DateTime?
   nFailedAttempts    Int      @default(0)
-  dDeletedAt         DateTime? // Soft delete
+  dDeletedAt         DateTime? // Fecha de eliminación (soft delete)
   
   dCreatedAt        DateTime  @default(now())
   dUpdatedAt        DateTime?  @updatedAt
@@ -49,13 +54,15 @@ model User {
 }
 
 // ==========================================
-// 2. TABLA DE ROLES (Reemplaza a "Profile")
+// 2. TABLA DE ROLES
 // ==========================================
 model Rol {
   idRol          Int      @id @default(autoincrement())
   cNombreRol           String   @unique
-  cAbrevRol           String
+  cAbrevRol           String?
+  lActivo        Boolean  @default(true)
 
+  lVigente        Boolean  @default(true)
   dCreatedAt       DateTime @default(now())
   dUpdatedAt       DateTime? @updatedAt
   
@@ -73,7 +80,9 @@ model Rol {
 // ==========================================
 model UsuarioUniversidad {
   idUsuarioUni         Int      @id @default(autoincrement())
-  lVigente         Boolean  @default(true)
+  lActivo         Boolean  @default(true)  // lActivo indica si el usuario está activo su perfil en la universidad es como una palanca de encendido/apagado del perfil
+
+  lVigente         Boolean  @default(true) // lVigente solo se usa para sof delete
 
   // Llaves foráneas
   idUser         Int      
@@ -94,7 +103,8 @@ model UsuarioUniversidad {
   // project        Project[]
 
   // Evita que un mismo usuario tenga el mismo rol dos veces en la misma oficina
-  @@unique([idUser, idRol, idOficina])
+  @@unique([idUser, idRol, idOficina], name: "unique_usuario_rol_oficina", map: "user_rol_oficina_universidad_unique_constraint")
+
   @@map("user_rol_oficina_universidad")
 }
 
@@ -105,12 +115,16 @@ model Permiso {
   idPermiso          Int      @id @default(autoincrement())
   cNombrePermiso           String   @unique
   cAbrevPermiso     String?
+  lActivo        Boolean  @default(true)
+
+  lVigente        Boolean  @default(true)
 
   dCreatedAt       DateTime @default(now())
-  dUpdatedAt       DateTime @updatedAt
+  dUpdatedAt       DateTime? @updatedAt
 
   detallePermisos DetallePermiso[]
   
+
   @@map("permiso")
 }
 
@@ -118,11 +132,15 @@ model DetallePermiso {
   idDetallePermiso    Int     @id @default(autoincrement())
   idRol     Int 
   idPermiso     Int
-  lVigente     Boolean @default(false)
+  lActivo     Boolean @default(true)  
+
+  lVigente     Boolean @default(true)
   
   permiso    Permiso @relation(fields: [idPermiso], references: [idPermiso])
   rol        Rol     @relation(fields: [idRol], references: [idRol])
   
+  @@unique([idRol, idPermiso], name: "unique_detalle_permiso", map: "detalle_permiso_unique_constraint")
+
   @@map("detallePermiso")
 }
 
@@ -130,16 +148,18 @@ model Oficina {
   idOficina     Int      @id @default(autoincrement())
   cNombreOficina      String   @unique
   cAbrevOficina   String
+  lActivo        Boolean  @default(true)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime? @updatedAt
+  lVigente        Boolean  @default(true)
+  dCreatedAt     DateTime @default(now())
+  dUpdatedAt     DateTime? @updatedAt
 
   asignaciones  UsuarioUniversidad[]
   // form          Form[]
   // plantillas    Plantilla[]
   // plantillasDoc PlantillaDocumento[]
   invitaciones      Invitation[]
-  
+
   @@map("oficina")
 }
 

@@ -25,6 +25,7 @@ export class AuthController {
             const { cEmail, cPassword, idActiveProfile } = req.body;
             const result = await this._loginUseCase.execute(cEmail, cPassword, idActiveProfile);
 
+            console.log("Resultado del login:", result);
             res.status(200).json({ nSuccess: true, data: result });
         } catch (error) {
             next(error);
