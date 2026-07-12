@@ -1,0 +1,1951 @@
+/***********************************************************************************************************************************************************************************************            
+* Copyright © 2018 CRACLASA - All rights reserved.              
+*                                                       
+* Objetivo    : Obtener Expedientes para Menu de Expedientes  
+*              
+* Escrito por   :   Alex Carlos Larico Condori  
+*  
+* Email/Movil/Phone  : alarico@cajalosandes.pe  
+*              
+* Fecha creación:  2018/05/03  
+*              
+* Sistema / Modulo:  CRE  
+*            
+* Modificaciones:      
+*       Fecha       Responsable     Descripcion del cambio     
+*   2018-08-30  ALarico      Se agrega extencion de expediente, fecha de guardado  
+*   2018-09-05  ALarico      Soporte para Rpt de Posicion Integral de Intervinientes  
+*   2018-09-12  ALarico      Soporte para DNI de Intervinientes  
+*   2018/09/14  Alarico      Soporte para Plan de Pagos Anterior congelado  
+*   2018/10/03  ALarico      Consultar cuando se devuelve a Evaluación, ultima fecha de congelado  
+*   2018/11/09  ALarico      Se agrega al menu para su consulta de Flujo de Caja  
+*   2019/05/10  ALarico      Se agrega consulta DNI, Posicion Integral y Sentinel para integrantes de Grupo Solidario  
+*   2019/07/16  ALarico      Se agrega la fecha al mostrado de visitas  
+*   2019/09/23  ALarico      Se agrega el mostrado del Tipo de Visita  
+*   2021/08/12  ALarico      Se pre proesa lo archivos cargados y congelados de la tabla SI_FINArchivo  
+*   2023/06/12  wramosr      Se añade cantidad de digitos para el varchar @tmpMenu cMenu VARCHAR(500)   
+*   2023/07/13  JCASAS       Se agrega información para Posicion consolidada de cliente   
+*   2023/08/21  RACERO       Se deshabilita el filtro para la Posicion Integral de Intervinientes  
+*   2023/11/01  MLAURA       Se agrega la información correspondiente a Tasa Negociable.  
+*   2023-09-14  capaza       Se agrega la información correspondiente a desembolsos virtuales.  
+*   2024-09-20  denciso      Se agrega el estado 19 Devuelto al campo lEditable  
+*   2024/09/25  rgomez       Se agrega cambios para archivos cargado la categoría FirmaElectronica.  
+*   2024/11/27  wmamaniq	 Optimizacion SELECT para opinion de riesgos - reduce tiempo en 70%
+*   2024/06/21  MLAURA		 Se agrega Reporte de SobreEndeudamiento por Originación.
+*   2024-10-22	mlaura		 Se agrega filtro para solicitudes retención tasa.
+*   2024-12-27	denciso	     Se corrige la variable @idSolicitud por @idSolicitudOrigen para tasa negociada.
+*   2025-01-22	mmamani	     Se agrega modificación de orden de visualización al Expediente Virtual.
+*   2025-04-19	racero		 Se corrige el orden para generar correctamente los nodos padre (reprogramacion)
+*   2025-05-15	DSalcca		 Se agrega filtro para nuevos expedientes de grupo solidario.
+*   2025-06-15  gfernandez   Se agrega parámetro idTipoFirma para validar los documentos a mostrar.
+*   2025-07-18  gfernandez   Se elimina validación de documentos electrónicos para firma.
+*	2025-12-24	jespiritu	 Se agrega lógica para el nuevo reporte de posición consolidada de cliente.
+*   2026-06-30  rgomez       Optimización de consultas.
+* Sintaxis de ejemplo:
+     EXEC GEN_ObtenerMenuExpediente_SP 2234569, 'individual'  
+     EXEC GEN_ObtenerMenuExpediente_SP 2193095, 'individual', 1 
+     EXEC GEN_ObtenerMenuExpediente_SP 2193095, 'individual', 2 
+     EXEC GEN_ObtenerMenuExpediente_SP 6202, 'grupal'  
+     EXEC GEN_ObtenerMenuExpediente_SP 7379, 'grupal'  
+***********************************************************************************************************************************************************************************************/
+CREATE PROCEDURE [dbo].[GEN_ObtenerMenuExpediente_SP]
+    @idSolicitud INT,
+    @cTipoSolicitud VARCHAR(20),
+    @idTipoFirma INT = -1
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- SECCIÓN 1: Declaración de Variables
+    DECLARE @dFechaProduccion DATE = '2018-09-18';
+    DECLARE @idTipoFirmaElectronica INT;
+    DECLARE @idCuenta INT;
+    DECLARE @nMontoDesembolso DECIMAL;
+    DECLARE @idGrupoSolidario INT;
+    DECLARE @idSolicitudOrigen INT;
+    DECLARE @lRetencionAprobado BIT = 0;
+    DECLARE @dRetencionAprobado DATE;
+    DECLARE @cDescTipoDoc VARCHAR(120);
+    DECLARE @cExpediente VARCHAR(120);
+    DECLARE @idDescPosIntgr INT = 0;
+    DECLARE @dFechaSis DATE;
+    DECLARE @dFecRptPosIntConsolNuevo DATE;
+    DECLARE @idDescPosConsCliente INT = 0;
+    DECLARE @idDescDNI INT = 0;
+    DECLARE @lDevuelto INT = 0;
+    DECLARE @idDescInfoGral INT;
+    DECLARE @idSentinel INT;
+    DECLARE @cMenuTasa VARCHAR(250);
+    DECLARE @idOpeTasa INT;
+    DECLARE @FechaVigencia VARCHAR(100);
+    DECLARE @idDescTipoDocInte INT;
+    DECLARE @idDescTipoDocGrup INT;
+    DECLARE @idArchivoFinal INT;
+    DECLARE @idTipoArchivoSBS INT;
+    DECLARE @_idDescTipoDoc INT;
+    DECLARE @_idOperacion INT;
+    DECLARE @_idTipoSolTasaDesembolso INT;
+    DECLARE @_idOperacionSOL INT;
+    
+    -- OPTIMIZACIÓN: Consolidar consultas a SI_FinSolicitud
+    DECLARE @dFechaRegistro DATE, @dFechaDecisFinal DATE, @idModoDesembolsoCli INT;
+    
+    SELECT @dFechaRegistro = dFechaRegistro,
+           @dFechaDecisFinal = dFechaDecisFinal,
+           @idModoDesembolsoCli = idModoDesembolsoCli,
+           @_idOperacionSOL = idOperacion
+    FROM dbo.SI_FinSolicitud
+    WHERE idSolicitud = @idSolicitud;
+
+    -- Inicializar idTipoFirma
+    IF (@idTipoFirma <= 0)
+    BEGIN
+        SELECT @idTipoFirma = idTipoFirma
+        FROM dbo.SI_FinSolicitud
+        WHERE idSolicitud = @idSolicitud;
+    END;
+    
+    SELECT @idTipoFirmaElectronica = idTipoFirma
+    FROM dbo.SI_FinTipoFirma
+    WHERE cTipoFirma = 'FIRMA ELECTRÓNICA KEYNUA';
+
+    -- SECCIÓN 2: Preparar Condonaciones
+    DECLARE @tmpCondonacion TABLE
+    (
+        idMenu INT,
+        cMenu VARCHAR(120),
+        idPadre INT,
+        idDescTipoDoc INT,
+        nOrden INT,
+        idCategoriaArchivo INT,
+        idArchivo INT,
+        cExtension VARCHAR(120),
+        idSecundario INT
+    );
+    
+    SELECT @idCuenta = idCuenta
+    FROM dbo.SI_FinCreditos
+    WHERE idSolicitud = @idSolicitud
+          AND @cTipoSolicitud = 'individual';
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM SI_FinSolicitudAprobacion
+        WHERE idDocumento = @idCuenta
+              AND idEstadoAproba NOT IN ( 4, 7 )
+              AND lVigente = 1
+    )
+    BEGIN
+
+        INSERT INTO @tmpCondonacion
+        (
+            idMenu,
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idMenu = C.idDescTipoDoc * 100 + A.idTipoDoc + 1,
+               cMenu = F.cDocumento,
+               idPadre = D.idSolicitudAproba,
+               C.idDescTipoDoc,
+               nOrden = C.nOrden + (DATEDIFF(DAY, D.dFechaReg, GETDATE()))
+                        + ROW_NUMBER() OVER (PARTITION BY C.idDescTipoDoc ORDER BY D.idSolicitudAproba ASC),
+               C.idCategoriaArchivo,
+               idArchivo = A.idTipoDoc,
+               cExtension = '.pdf',
+               idSecundario = D.idSolicitudAproba
+        FROM dbo.SI_FINSolDocumentosCondonacion A
+            INNER JOIN dbo.SI_FinCreditos B 
+                ON A.idCuenta = B.idCuenta
+            INNER JOIN dbo.SI_FinSolicitudAprobacion D 
+                ON A.idCuenta = D.idDocumento
+                   AND A.idSolApr = D.idSolicitudAproba
+                   AND D.idEstadoAproba NOT IN ( 4, 7 )
+            INNER JOIN dbo.SI_FinEstadoAproba E 
+                ON E.idEstadoAproba = D.idEstadoAproba
+            INNER JOIN dbo.SI_FINTipoDocCondonacion F 
+                ON F.idTipoDoc = A.idTipoDoc
+            CROSS JOIN dbo.SI_FINDescTipoDoc C
+        WHERE B.idSolicitud = @idSolicitud
+              AND A.cNombreDoc <> ''
+              AND A.lVigente = 1
+              AND C.cDescTipoDoc = 'SOLICITUD DE CONDONACIÓN'
+              AND C.lVigente = 1
+              AND @cTipoSolicitud = 'individual';
+
+        INSERT INTO @tmpCondonacion
+        (
+            idMenu, 
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idMenu = MIN(idMenu) - 1,
+                cMenu = 'Informe - Propuesta de Negociación',
+                idPadre, 
+                idDescTipoDoc,
+                nOrden = MIN(nOrden),
+                idCategoriaArchivo,
+                idArchivo = 0,
+                cExtension = '.rdlc',
+                idSecundario
+        FROM @tmpCondonacion
+        GROUP BY idPadre, 
+                idDescTipoDoc, 
+                idCategoriaArchivo, 
+                idSecundario
+        UNION ALL
+        SELECT idMenu = D.idSolicitudAproba,
+               cMenu = CONCAT(
+                   'Solicitud: ',
+                   D.idSolicitudAproba,
+                   ' (',
+                   CONVERT(VARCHAR(10), D.dFechaReg, 103),
+                   ') ',
+                   E.cEstadoAproba
+               ),
+               idPadre = C.idDescTipoDoc,
+               C.idDescTipoDoc,
+               nOrden = C.nOrden + (DATEDIFF(DAY, D.dFechaReg, GETDATE())),
+               idCategoriaArchivo = 0,
+               idArchivo = 0,
+               cExtension = '.pdf',
+               idSecundario = 0
+        FROM dbo.SI_FINSolDocumentosCondonacion A
+            INNER JOIN dbo.SI_FinCreditos B 
+                ON A.idCuenta = B.idCuenta
+            INNER JOIN dbo.SI_FinSolicitudAprobacion D 
+                ON A.idCuenta = D.idDocumento
+                   AND A.idSolApr = D.idSolicitudAproba
+                   AND D.idEstadoAproba NOT IN ( 4, 7 )
+            INNER JOIN dbo.SI_FinEstadoAproba E 
+                ON E.idEstadoAproba = D.idEstadoAproba
+            INNER JOIN dbo.SI_FINTipoDocCondonacion F 
+                ON F.idTipoDoc = A.idTipoDoc
+            CROSS JOIN dbo.SI_FINDescTipoDoc C
+        WHERE B.idSolicitud = @idSolicitud
+              AND A.cNombreDoc <> ''
+              AND A.lVigente = 1
+              AND C.cDescTipoDoc = 'SOLICITUD DE CONDONACIÓN'
+              AND C.lVigente = 1
+              AND @cTipoSolicitud = 'individual'
+        GROUP BY D.idSolicitudAproba, 
+            C.idDescTipoDoc, 
+            E.cEstadoAproba, 
+            C.nOrden, 
+            D.dFechaReg;
+    END;
+
+    -- SECCIÓN 3: Cargar Archivos
+    DECLARE @tmpArchivos TABLE
+    (
+        idArchivos INT,
+        cNombreArchivo VARCHAR(360),
+        idTipoArchivo INT,
+        idCli INT,
+        idSolicitud INT,
+        idCategoriaArchivo INT,
+        idDescTipoDoc INT,
+        idSolicitudCredGrupoSol INT,
+        idArchivoForeing INT,
+        idFormato INT,
+        dFechaReg DATE,
+        lVigente BIT,
+        dFechaMod DATE,
+        idModulo INT,
+        cDetalleArchivo VARCHAR(200)
+    );
+
+    INSERT INTO @tmpArchivos
+    (
+        idArchivos      , cNombreArchivo        , idTipoArchivo     , idCli                     , 
+        idSolicitud     , idCategoriaArchivo    , idDescTipoDoc     , idSolicitudCredGrupoSol   ,
+        idArchivoForeing, idFormato             , dFechaReg         , lVigente                  , 
+        dFechaMod       , idModulo              , cDetalleArchivo
+    )
+    SELECT idArchivos, 
+        cNombreArchivo, 
+        idTipoArchivo, 
+        idCli, 
+        idSolicitud,
+        idCategoriaArchivo, 
+        idDescTipoDoc, 
+        idSolicitudCredGrupoSol,
+        idArchivoForeing, 
+        idFormato, 
+        dFechaReg, 
+        lVigente, 
+        dFechaMod,
+        idModulo, 
+        cDetalleArchivo
+    FROM dbo.SI_FinArchivo
+    WHERE (
+              @cTipoSolicitud = 'individual'
+              AND idSolicitud = @idSolicitud
+          )
+          OR (
+                @cTipoSolicitud = 'grupal'
+                AND idSolicitudCredGrupoSol = @idSolicitud
+            )
+            AND
+            (
+                idDescTipoDoc = 19
+                AND lVigente = 1
+                OR idDescTipoDoc <> 19
+            );
+
+    -- SECCIÓN 4: Solicitudes ORIGEN TasaPost
+    SET @idSolicitudOrigen = 0;
+    
+    SELECT @idSolicitudOrigen = idSolicitudOrigen
+    FROM SI_FINSoliCambioCredito
+    WHERE idSolicitud = @idSolicitud
+          AND idOperacion = 7;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM SI_FinTasaNegociada
+        WHERE idSolicitud = @idSolicitudOrigen
+              AND lVigente = 1
+              AND ISNULL(idTipoSolTasaDesembolso, 1) = 2
+    )
+    BEGIN
+        IF EXISTS
+        (
+            SELECT 1
+            FROM SI_FINSoliCambioCredito
+            WHERE idSolicitud = @idSolicitud
+                  AND idOperacion = 7
+        )
+        BEGIN
+            -- OPTIMIZACIÓN: Inserción directa sin tabla temporal #FilteredArchivos1
+            INSERT INTO @tmpArchivos
+            (
+                idArchivos          , cNombreArchivo    , idTipoArchivo     , idCli                     , 
+                idSolicitud         , idCategoriaArchivo, idDescTipoDoc     , idSolicitudCredGrupoSol   ,
+                idArchivoForeing    , idFormato         , dFechaReg         , lVigente                  , 
+                dFechaMod           , idModulo          , cDetalleArchivo
+            )
+            SELECT idArchivos,
+                cNombreArchivo, 
+                idTipoArchivo, 
+                idCli, 
+                idSolicitud,
+                idCategoriaArchivo, 
+                idDescTipoDoc, 
+                idSolicitudCredGrupoSol,
+                idArchivoForeing, 
+                idFormato, 
+                dFechaReg, 
+                lVigente, 
+                dFechaMod,
+                idModulo, 
+                cDetalleArchivo
+            FROM dbo.SI_FinArchivo
+            WHERE (
+                      @cTipoSolicitud = 'individual'
+                      AND idSolicitud = @idSolicitudOrigen
+                  )
+                  OR (
+                         @cTipoSolicitud = 'grupal'
+                         AND idSolicitudCredGrupoSol = @idSolicitudOrigen
+                     )
+                     AND
+                     (
+                         idDescTipoDoc = 19
+                         AND lVigente = 1
+                         OR idDescTipoDoc <> 19
+                     );
+
+            IF EXISTS
+            (
+                SELECT 1
+                FROM SI_FINSoliCambioCredito
+                WHERE idSolicitud = @idSolicitud
+                      AND idOperacion = 7
+                      AND ISNULL(nReprogramacion, 0) != 0
+            )
+            BEGIN
+                SET @lRetencionAprobado = 1;
+                SET @dRetencionAprobado =
+                (
+                    SELECT dFechaOpe
+                    FROM SI_FINSoliCambioCredito
+                    WHERE idSolicitud = @idSolicitud
+                          AND idOperacion = 7
+                );
+            END;
+        END;
+    END;
+
+    -- SECCIÓN 5: Tablas de trabajo para menú
+    DECLARE @tmpMenu TABLE
+    (
+        idMenu INT,
+        cMenu VARCHAR(500),
+        idPadre INT,
+        idDescTipoDoc INT,
+        nOrden FLOAT,
+        idCategoriaArchivo INT,
+        idArchivo INT,
+        cExtension VARCHAR(5),
+        idSecundario INT
+    );
+
+    DECLARE @tmpDescTipoDoc TABLE
+    (
+        idExpediente INT,
+        nOrden INT,
+        idDetGrupo INT,
+        idDescTipoDoc INT
+    );
+
+    INSERT INTO @tmpDescTipoDoc 
+    (
+        idExpediente, 
+        nOrden, 
+        idDetGrupo, 
+        idDescTipoDoc
+    )
+    EXEC dbo.GEN_IdExpedientesGrupo_SP 0, @idSolicitud, @cTipoSolicitud, 1;
+
+    -- SECCIÓN 6: Posición Integral Intervinientes
+    SELECT @idDescPosIntgr = idDescTipoDoc
+    FROM dbo.SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'Posición Integral de Intervinientes';
+
+    IF (@dFechaRegistro >= @dFechaProduccion OR @dFechaDecisFinal >= @dFechaProduccion)
+    BEGIN
+        INSERT INTO @tmpMenu
+        (
+            idMenu, 
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idMenu = -1,
+               cDescMenu = CONCAT(
+                   '(R) ',
+                   AA.cTipoIntervencion,
+                   ' (',
+                   Cl.cDocumentoID,
+                   ') ',
+                   CASE 
+                       WHEN D.dFechaReg IS NULL THEN ''
+                       ELSE CONVERT(VARCHAR(10), D.dFechaReg, 103)
+                   END
+               ),
+               idPadre = B.idDescTipoDoc,
+               B.idDescTipoDoc,
+               nOrden = C.nOrden + A.idTipoInterv + 1,
+               B.idCategoriaArchivo,
+               idArchivos = ISNULL(D.idArchivos, 0),
+               cExtension = '.rdlc',
+               idSecundario = A.idCli
+        FROM dbo.SI_FinCliIntervCre A
+            INNER JOIN dbo.SI_FinCliente Cl 
+                ON Cl.idCli = A.idCli 
+                AND Cl.lVigente = 1
+            INNER JOIN dbo.SI_FinTipoIntervencionCre AA 
+                ON AA.idTipoInterv = A.idTipoInterv
+                   AND AA.idTipoInterv NOT IN ( 2, 4, 12 )
+                   AND A.lEstado = 1
+                   AND A.idSolicitud = @idSolicitud
+                   AND A.idModulo = 1
+            CROSS JOIN dbo.SI_FINDescTipoDoc B
+            INNER JOIN dbo.SI_FINDescTipoDoc C 
+                ON C.idDescTipoDoc = B.idPadre 
+                AND C.lVigente = 1
+            CROSS JOIN dbo.SI_FinExpediente E
+            LEFT JOIN @tmpArchivos D
+                ON D.idCategoriaArchivo = B.idCategoriaArchivo
+                   AND D.idCli = A.idCli
+                   AND D.lVigente = 1
+                   AND D.idDescTipoDoc = @idDescPosIntgr
+                   AND @idSolicitud = CASE WHEN @cTipoSolicitud = 'individual' 
+                                           THEN D.idSolicitud 
+                                           ELSE D.idSolicitudCredGrupoSol END
+        WHERE E.cStoreProcedure = 'CRE_RptPosicionIntegralIntervinientes_SP'
+              AND B.cDescTipoDoc = 'Posición Integral de Intervinientes'
+              AND @cTipoSolicitud = 'individual';
+    END;
+
+    -- SECCIÓN 7: Posición Consolidada Cliente
+    SELECT @dFechaSis = CAST(cValVar AS DATE) 
+    FROM dbo.SI_FinVariable 
+    WHERE cVariable = 'dFechaAct' AND idAgencia = 1;
+    
+    SELECT @dFecRptPosIntConsolNuevo = CAST(cValVar AS DATE) 
+    FROM dbo.SI_FinVariable 
+    WHERE cVariable = 'dFecRptPosIntConsolNuevo';
+    
+    SELECT @idDescPosConsCliente = idDescTipoDoc
+    FROM dbo.SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'Posición consolidada Cliente';
+
+    IF (@dFechaRegistro >= @dFechaProduccion OR @dFechaDecisFinal >= @dFechaProduccion)
+    BEGIN
+        INSERT INTO @tmpMenu
+        (
+            idMenu, 
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idMenu = -1,
+               cDescMenu = CONCAT(
+                   '(R) ',
+                   AA.cTipoIntervencion,
+                   ' (',
+                   Cl.cDocumentoID,
+                   ') ',
+                   CASE 
+                       WHEN D.dFechaReg IS NULL THEN ''
+                       ELSE CONVERT(VARCHAR(10), D.dFechaReg, 103)
+                   END
+               ),
+               idPadre = B.idDescTipoDoc,
+               B.idDescTipoDoc,
+               nOrden = C.nOrden + A.idTipoInterv + 1,
+               B.idCategoriaArchivo,
+               idArchivos = ISNULL(D.idArchivos, 0),
+               cExtension = '.rdlc',
+               idSecundario = A.idCli
+        FROM dbo.SI_FinCliIntervCre A
+            INNER JOIN dbo.SI_FinCliente Cl 
+                ON Cl.idCli = A.idCli 
+                    AND Cl.lVigente = 1
+            INNER JOIN dbo.SI_FinTipoIntervencionCre AA 
+                ON AA.idTipoInterv = A.idTipoInterv
+                   AND AA.idTipoInterv NOT IN ( 2, 4, 12 )
+                   AND A.lEstado = 1
+                   AND A.idSolicitud = @idSolicitud
+                   AND A.idModulo = 1
+            CROSS JOIN dbo.SI_FINDescTipoDoc B
+            INNER JOIN dbo.SI_FINDescTipoDoc C 
+                ON C.idDescTipoDoc = B.idPadre 
+                    AND C.lVigente = 1
+            CROSS JOIN dbo.SI_FinExpediente E
+            LEFT JOIN @tmpArchivos D
+                ON D.idCategoriaArchivo = B.idCategoriaArchivo
+                   AND D.idCli = A.idCli
+                   AND D.lVigente = 1
+                   AND D.idDescTipoDoc = @idDescPosConsCliente
+                   AND @idSolicitud = CASE WHEN @cTipoSolicitud = 'individual' 
+                                           THEN D.idSolicitud 
+                                           ELSE D.idSolicitudCredGrupoSol END
+        WHERE E.cStoreProcedure = 'CRE_RptPosicionConsolidadaCliente_SP'
+              AND B.cDescTipoDoc = 'Posición consolidada Cliente'
+              AND E.cExpediente = CASE 
+                  WHEN @dFechaSis >= @dFecRptPosIntConsolNuevo 
+                  THEN 'Posición Consolidada de Cliente Nuevo'
+                  ELSE 'Posición consolidada Cliente'
+              END
+              AND @cTipoSolicitud = 'individual';
+    END;
+
+    -- SECCIÓN 8: DNI Intervinientes
+    SELECT @idDescDNI = idDescTipoDoc
+    FROM dbo.SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'DNI de Intervinientes';
+
+    INSERT INTO @tmpMenu
+    (
+        idMenu, 
+        cMenu, 
+        idPadre, 
+        idDescTipoDoc, 
+        nOrden,
+        idCategoriaArchivo, 
+        idArchivo, 
+        cExtension, 
+        idSecundario
+    )
+    SELECT idMenu = -1,
+           cDescMenu = CONCAT('(R) ', AA.cTipoIntervencion, ' (', Cl.cDocumentoID, ') '),
+           idPadre = B.idDescTipoDoc,
+           B.idDescTipoDoc,
+           nOrden = C.nOrden + A.idTipoInterv * 10,
+           B.idCategoriaArchivo,
+           idArchivos = 0,
+           cExtension = '.rdlc',
+           idSecundario = A.idCli
+    FROM dbo.SI_FinCliIntervCre A
+        INNER JOIN dbo.SI_FinCliente Cl 
+            ON Cl.idCli = A.idCli 
+            AND Cl.lVigente = 1
+        INNER JOIN dbo.SI_FinTipoIntervencionCre AA 
+            ON AA.idTipoInterv = A.idTipoInterv
+               AND A.lEstado = 1
+               AND A.idSolicitud = @idSolicitud
+               AND A.idModulo = 1
+        CROSS JOIN dbo.SI_FINDescTipoDoc B
+        INNER JOIN dbo.SI_FINDescTipoDoc C 
+            ON C.idDescTipoDoc = B.idPadre 
+            AND C.lVigente = 1
+        CROSS JOIN dbo.SI_FinExpediente E
+    WHERE E.cStoreProcedure = 'CLI_RecuperaDatosDNISolicitud_SP'
+          AND B.cDescTipoDoc = 'DNI de Intervinientes'
+          AND @cTipoSolicitud = 'individual';
+
+    -- SECCIÓN 9: Expedientes Generados
+    IF (@cTipoSolicitud = 'individual')
+    BEGIN
+        SELECT @lDevuelto = CASE WHEN idEstadoEvalCred IN ( 8, 9 ) THEN 1 ELSE 0 END
+        FROM dbo.SI_FinEvalCred
+        WHERE idSolicitud = @idSolicitud
+              AND lAlterna = 0;
+    END;
+    ELSE
+    BEGIN
+        SELECT @lDevuelto = CASE WHEN idEstadoEvalCred IN ( 8, 9 ) THEN 1 ELSE 0 END
+        FROM dbo.SI_FinEvalCredGrupoSol
+        WHERE idSolicitudCredGrupoSol = @idSolicitud
+        GROUP BY idEstadoEvalCred;
+    END;
+
+    INSERT INTO @tmpMenu
+    (
+        idMenu, 
+        cMenu, 
+        idPadre, 
+        idDescTipoDoc, 
+        nOrden,
+        idCategoriaArchivo, 
+        idArchivo, 
+        cExtension, 
+        idSecundario
+    )
+    SELECT idMenu = -1,
+           cDescMenu = CONCAT(
+               '(R) ',
+               CASE
+                   WHEN B.idDescTipoDoc = 34 THEN 'Solicitud Crédito Grupal'
+                   WHEN B.idDescTipoDoc = 35 THEN 'Evaluación Cualitativa'
+                   WHEN B.idDescTipoDoc = 36 THEN 'Evaluación Cuantitativa y Excepciones'
+                   WHEN B.idDescTipoDoc = 37 THEN 'Acta de Resolución de crédito grupal'
+                   ELSE B.cDescTipoDoc
+               END,
+               ' ',
+               CASE
+                   WHEN D.idArchivos IS NULL OR @lDevuelto = 1 THEN '(*)'
+                   WHEN @lDevuelto = 1 THEN ''
+                   ELSE CONVERT(VARCHAR(10), ISNULL(D.dFechaMod, D.dFechaReg), 103)
+               END
+           ),
+           idPadre = B.idPadre,
+           A.idDescTipoDoc,
+           nOrden = C.nOrden + A.nOrden,
+           B.idCategoriaArchivo,
+           idArchivos = CASE WHEN D.idArchivos IS NULL OR @lDevuelto = 1 THEN 0 ELSE D.idArchivos END,
+           cExtension = '.rdlc',
+           idSecundario = 0
+    FROM @tmpDescTipoDoc A
+        INNER JOIN dbo.SI_FINDescTipoDoc B 
+            ON A.idDescTipoDoc = B.idDescTipoDoc 
+            AND B.lVigente = 1
+        INNER JOIN dbo.SI_FINDescTipoDoc C 
+            ON C.idDescTipoDoc = B.idPadre 
+            AND C.lVigente = 1
+        LEFT JOIN @tmpArchivos D
+            ON D.idCategoriaArchivo = B.idCategoriaArchivo
+               AND D.idArchivoForeing = A.idExpediente
+               AND D.lVigente = 1
+               AND @idSolicitud = CASE WHEN @cTipoSolicitud = 'individual' 
+                                       THEN D.idSolicitud 
+                                       ELSE D.idSolicitudCredGrupoSol END
+    UNION ALL
+    -- Flujo de Caja
+    SELECT idMenu = -1,
+           cMenu = CONCAT(
+               '(R) Hoja Resumen', 
+               CONVERT(VARCHAR(10), ISNULL(dFechaMod, dFechaReg), 103)
+           ),
+           idPadre = 23,
+           idDescTipoDoc = 26,
+           nOrden = 23000015,
+           idCategoriaArchivo = 2,
+           idArchivo = idArchivos,
+           cExtension = '.rdlc',
+           idSecundario = 0
+    FROM @tmpArchivos
+    WHERE idSolicitud = @idSolicitud
+          AND idCategoriaArchivo = 2
+          AND idDescTipoDoc = 26
+          AND idArchivoForeing = 26
+    UNION ALL
+    -- VISITAS
+    SELECT idMenu = E.idVisita,
+           cMenu = CONCAT(
+               ISNULL(G.cPerfil, 'SIN PERFIL'),
+               ' - ',
+               F.cWinUser,
+               ' (',
+               J.cNombre,
+               ') ',
+               CONVERT(VARCHAR(10), E.dtFechaVisita, 103)
+           ),
+           idPadre = H.idDescTipoDoc,
+           H.idDescTipoDoc,
+           nOrden = H.nOrden + ROW_NUMBER() OVER (PARTITION BY E.idVisita ORDER BY E.idVisita ASC),
+           H.idCategoriaArchivo,
+           idArchivos = E.idVisita,
+           cExtension = '.jpg',
+           idSecundario = 0
+    FROM dbo.SI_FINVisita E
+        INNER JOIN dbo.SI_FINTipoVisita J
+        ON J.idTipoVisita = E.idTipoVisita
+        INNER JOIN dbo.SI_FinUsuario F 
+            ON F.idUsuario = E.idUsuario
+        LEFT JOIN dbo.SI_FinPerfil G 
+            ON G.idPerfil = E.idPerfil
+        CROSS JOIN dbo.SI_FINDescTipoDoc H
+    WHERE E.idSolicitud = @idSolicitud
+          AND H.cDescTipoDoc = 'VISITA'
+          AND H.lVigente = 1
+    GROUP BY E.idVisita, 
+        E.idPerfil, 
+        G.cPerfil, 
+        F.cWinUser,
+        H.idDescTipoDoc, 
+        H.cDescTipoDoc, 
+        H.nOrden, 
+        H.idCategoriaArchivo,
+        E.idUsuario, 
+        E.dtFechaVisita, 
+        J.cNombre
+    UNION ALL
+    -- Archivos Visita GS
+    SELECT idMenu = E.idVisita,
+           cMenu = CONCAT(
+               ISNULL(G.cPerfil, 'SIN PERFIL'),
+               ' - ',
+               F.cWinUser,
+               ' (',
+               J.cNombre,
+               ') ',
+               CONVERT(VARCHAR(10), E.dtFechaVisita, 103)
+           ),
+           idPadre = H.idDescTipoDoc,
+           H.idDescTipoDoc,
+           nOrden = H.nOrden + ROW_NUMBER() OVER (PARTITION BY E.idVisita ORDER BY E.idVisita ASC),
+           H.idCategoriaArchivo,
+           idArchivos = E.idVisita,
+           cExtension = '.jpg',
+           idSecundario = 0
+    FROM dbo.SI_FINVisita E
+        INNER JOIN dbo.SI_FINTipoVisita J 
+            ON J.idTipoVisita = E.idTipoVisita
+        INNER JOIN dbo.SI_FinUsuario F 
+            ON F.idUsuario = E.idUsuario
+        LEFT JOIN dbo.SI_FinPerfil G 
+            ON G.idPerfil = E.idPerfil
+        CROSS JOIN dbo.SI_FINDescTipoDoc H
+    WHERE E.idSolicitudCredGrupoSol = @idSolicitud
+          AND H.cDescTipoDoc = 'VISITA'
+          AND H.lVigente = 1
+    GROUP BY E.idVisita, 
+        E.idPerfil, 
+        G.cPerfil, 
+        F.cWinUser,
+        H.idDescTipoDoc, 
+        H.cDescTipoDoc, 
+        H.nOrden, 
+        H.idCategoriaArchivo,
+        E.idUsuario, 
+        E.dtFechaVisita, 
+        J.cNombre
+    UNION ALL
+    -- Archivos Cargados
+    SELECT idMenu = B.idSolicitud,
+           cDescMenu = CONCAT(
+               CASE 
+                   WHEN A.cTipoArchivo LIKE '%Solicitud y Aprobación de Tasa Negociable%' THEN '(R) '
+                   ELSE '(C) '
+               END,
+               A.cTipoArchivo,
+               CASE 
+                   WHEN D.cNombreCategoria = 'FirmaElectronica' THEN
+                       CASE WHEN A.idTipoArchivo = 20 THEN ' - Electrónico' ELSE ' - Firma Electrónica' END
+                   ELSE ''
+               END,
+               CASE 
+                   WHEN @lRetencionAprobado = 1 THEN CONVERT(VARCHAR(10), @dRetencionAprobado, 103)
+                   WHEN B.dFechaMod IS NULL THEN '(*)'
+                   ELSE CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+               END
+           ),
+           idPadre = C.idDescTipoDoc,
+           A.idDescTipoDoc,
+           nOrden = C.nOrden + A.idTipoArchivo * 30,
+           idCategoriaArchivo = D.idCategoriaArchivo,
+           idArchivos = B.idArchivos,
+           cExtension = '.pdf',
+           idSecundario = 0
+    FROM dbo.SI_FinTipoArchivoEscaneado A
+        INNER JOIN @tmpArchivos B
+            ON A.idTipoArchivo = B.idArchivoForeing
+               AND B.lVigente = 1
+        INNER JOIN dbo.SI_FINDescTipoDoc C 
+            ON C.idDescTipoDoc = B.idDescTipoDoc
+        INNER JOIN dbo.SI_FINCategoriaArchivo D
+            ON (D.cNombreCategoria IN ('Escaneado', 'FirmaElectronica'))
+               AND D.idCategoriaArchivo = B.idCategoriaArchivo
+        LEFT JOIN dbo.SI_FinTasaNegociada T
+            ON T.idSolicitud = B.idSolicitud
+               AND T.lVigente = 1
+               AND ISNULL(T.idTipoSolTasaDesembolso, 1) = 1
+    WHERE B.idSolicitud = @idSolicitud
+    UNION ALL
+    -- Archivos TasaNegociada
+    SELECT idMenu = B.idSolicitud,
+           cDescMenu = CONCAT(
+               '(R) ',
+               B.cNombreArchivo,
+               ' ',
+               CASE
+                   WHEN B.idDescTipoDoc = 19 THEN
+                       ISNULL(B.cDetalleArchivo, '') + ' '
+                       + CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ELSE
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+               END
+           ),
+           idPadre = C.idDescTipoDoc,
+           A.idDescTipoDoc,
+           nOrden = C.nOrden + A.idTipoArchivo * 30,
+           idCategoriaArchivo = D.idCategoriaArchivo,
+           idArchivos = B.idArchivos,
+           cExtension = '.rdlc',
+           idSecundario = 0
+    FROM dbo.SI_FinTipoArchivoEscaneado A
+        INNER JOIN @tmpArchivos B
+            ON A.idTipoArchivo = B.idArchivoForeing
+               AND B.lVigente = CASE 
+                                    WHEN B.idDescTipoDoc = 19 THEN 
+                                        B.lVigente 
+                                    ELSE 
+                                        1 
+                                    END
+        INNER JOIN dbo.SI_FINDescTipoDoc C 
+            ON C.idDescTipoDoc = B.idDescTipoDoc
+        INNER JOIN dbo.SI_FINCategoriaArchivo D
+            ON D.idCategoriaArchivo = 2
+               AND D.idCategoriaArchivo = B.idCategoriaArchivo
+    WHERE B.idSolicitud = @idSolicitud
+    UNION ALL
+    -- Central de Riesgos
+    SELECT idMenu = B.idSolicitud,
+           cMenu = CONCAT('(C) ', A.cDocumento, ' - ', B.cNombreDoc),
+           idPadre = C.nOrden * 100 + A.nGrupo * 10,
+           C.idDescTipoDoc,
+           nOrden = C.nOrden + A.nGrupo * 10
+                    + ROW_NUMBER() OVER (PARTITION BY B.idSolicitud ORDER BY B.idSolicitud ASC),
+           idCategoriaArchivo = C.idCategoriaArchivo,
+           idArchivos = B.idTipoDoc,
+           cExtension = '.pdf',
+           idSecundario = 0
+    FROM dbo.SI_FINTipoDocEvaluacion A
+        INNER JOIN dbo.SI_FINDocumentosEvaluacion B
+            ON A.idTipoDoc = B.idTipoDoc
+               AND A.lVigente = 1
+               AND B.lVigente = 1
+        CROSS JOIN dbo.SI_FINDescTipoDoc C
+    WHERE B.idSolicitud = @idSolicitud
+          AND B.cNombreDoc <> ''
+          AND C.cDescTipoDoc = 'CENTRAL DE RIESGOS'
+    UNION ALL
+    SELECT idMenu = C.nOrden * 100 + A.nGrupo * 10,
+           cMenu = A.cPertenencia,
+           idPadre = C.idDescTipoDoc,
+           C.idDescTipoDoc,
+           nOrden = C.nOrden + A.nGrupo * 10,
+           idCategoriaArchivo = 0,
+           idArchivos = 0,
+           cExtension = '.pdf',
+           idSecundario = 0
+    FROM dbo.SI_FINTipoDocEvaluacion A
+        INNER JOIN dbo.SI_FINDocumentosEvaluacion B
+            ON A.idTipoDoc = B.idTipoDoc
+               AND A.lVigente = 1
+               AND B.lVigente = 1
+        CROSS JOIN dbo.SI_FINDescTipoDoc C
+    WHERE B.idSolicitud = @idSolicitud
+          AND B.cNombreDoc <> ''
+          AND C.cDescTipoDoc = 'CENTRAL DE RIESGOS'
+    GROUP BY A.nGrupo, 
+        B.idSolicitud, 
+        A.cPertenencia,
+        C.idCategoriaArchivo, 
+        C.nOrden, 
+        C.idDescTipoDoc
+    UNION ALL
+    -- Condonaciones
+    SELECT idMenu, 
+        cMenu, 
+        idPadre, 
+        idDescTipoDoc, 
+        nOrden,
+        idCategoriaArchivo, 
+        idArchivo, 
+        cExtension, 
+        idSecundario
+    FROM @tmpCondonacion
+    UNION ALL
+    -- Solicitudes de Origen Tasa Negociada
+    SELECT idMenu = B.idSolicitud,
+           cDescMenu = CONCAT(
+               CASE 
+                   WHEN A.cTipoArchivo LIKE '%Solicitud y Aprobación de Tasa Negociable%' THEN '(R) '
+                   ELSE '(C) '
+               END,
+               A.cTipoArchivo,
+               ' ',
+               CASE
+                   WHEN B.dFechaMod IS NULL THEN '(*)'
+                   ELSE CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+               END
+           ),
+           idPadre = C.idDescTipoDoc,
+           A.idDescTipoDoc,
+           nOrden = C.nOrden + A.idTipoArchivo * 30,
+           idCategoriaArchivo = D.idCategoriaArchivo,
+           idArchivos = B.idArchivos,
+           cExtension = '.pdf',
+           idSecundario = 0
+    FROM dbo.SI_FinTipoArchivoEscaneado A
+        INNER JOIN @tmpArchivos B
+            ON A.idTipoArchivo = B.idArchivoForeing
+               AND B.lVigente = 1
+        INNER JOIN dbo.SI_FINDescTipoDoc C 
+            ON C.idDescTipoDoc = B.idDescTipoDoc
+        INNER JOIN dbo.SI_FINCategoriaArchivo D
+            ON D.cNombreCategoria = 'Escaneado'
+               AND D.idCategoriaArchivo = B.idCategoriaArchivo
+    WHERE B.idSolicitud = @idSolicitudOrigen;
+
+    -- SECCIÓN 10: Validaciones y completar menú
+    -- Para Pos Integral - Central Riesgos
+    IF (@dFechaRegistro >= @dFechaProduccion)
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = 32)
+        BEGIN
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT idDescTipoDoc, 
+                cDescTipoDoc, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                0, 
+                0, 
+                '', 
+                0
+            FROM dbo.SI_FINDescTipoDoc
+            WHERE idDescTipoDoc = 32
+                  AND @cTipoSolicitud = 'individual';
+        END;
+    END;
+
+    -- Para Posicion Consolidada
+    IF (@dFechaRegistro >= @dFechaProduccion)
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = 96)
+        BEGIN
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT idDescTipoDoc, 
+                cDescTipoDoc, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                0, 
+                0, 
+                '', 
+                0
+            FROM dbo.SI_FINDescTipoDoc
+            WHERE idDescTipoDoc = 96
+                  AND @cTipoSolicitud = 'individual';
+        END;
+    END;
+
+    -- Para DNI Intervinientes
+    SELECT @idDescInfoGral = idDescTipoDoc
+    FROM dbo.SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'INFORMACIÓN GENERAL DE INTERVINIENTES';
+    
+    IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = @idDescInfoGral)
+    BEGIN
+        INSERT INTO @tmpMenu
+        (
+            idMenu, 
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idDescTipoDoc, 
+               cDescTipoDoc, 
+               idPadre, 
+               idDescTipoDoc, 
+               nOrden,
+               0, 
+               0, 
+               '', 
+               0
+        FROM dbo.SI_FINDescTipoDoc
+        WHERE idDescTipoDoc = @idDescInfoGral
+              AND @cTipoSolicitud = 'individual';
+    END;
+
+    -- Desembolsos Virtuales
+    IF (@idModoDesembolsoCli <> 0)
+    BEGIN
+        INSERT INTO @tmpMenu
+        (
+            idMenu, 
+            cMenu, 
+            idPadre, 
+            idDescTipoDoc, 
+            nOrden,
+            idCategoriaArchivo, 
+            idArchivo, 
+            cExtension, 
+            idSecundario
+        )
+        SELECT idMenu = B.idSolicitud,
+               cDescMenu = CONCAT(
+                   CASE WHEN A.lChecklist = 1 THEN '(C) ' ELSE '(R) ' END,
+                   A.cTipoArchivo
+               ),
+               idPadre = C.idDescTipoDoc,
+               A.idDescTipoDoc,
+               nOrden = C.nOrden + A.idTipoArchivo * 30,
+               idCategoriaArchivo = D.idCategoriaArchivo,
+               idArchivos = B.idArchivos,
+               cExtension = TP.cExtencion,
+               idSecundario = 0
+        FROM dbo.SI_FinTipoArchivoEscaneado A
+            INNER JOIN @tmpArchivos B
+                ON A.idTipoArchivo = B.idArchivoForeing
+                   AND B.lVigente = 1
+            INNER JOIN dbo.SI_FINDescTipoDoc C 
+                ON C.idDescTipoDoc = B.idDescTipoDoc
+            INNER JOIN dbo.SI_FINCategoriaArchivo D
+                ON D.cNombreCategoria = 'Desembolsos Virtuales'
+                   AND D.idCategoriaArchivo = B.idCategoriaArchivo
+            LEFT JOIN dbo.SI_FINTipoArchivo TP 
+            ON B.idTipoArchivo = TP.idTipoArchivo
+        WHERE B.idSolicitud = @idSolicitud;
+    END;
+
+    -- Para SOBREENDEUDAMIENTO
+    SELECT @idSentinel = idDescTipoDoc
+    FROM dbo.SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'SOBREENDEUDAMIENTO';
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.SI_FinArchivo
+        WHERE idDesctipodoc = @idSentinel
+              AND idSolicitud = @idSolicitud
+    )
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = @idSentinel)
+        BEGIN
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT idDescTipoDoc, 
+                   cDescTipoDoc, 
+                   idPadre, 
+                   idDescTipoDoc, 
+                   nOrden,
+                   0, 
+                   0, 
+                   '', 
+                   0
+            FROM dbo.SI_FINDescTipoDoc
+            WHERE idPadre = @idSentinel
+                  AND @cTipoSolicitud = 'individual';
+        END;
+    END;
+
+    -- SECCIÓN 11: Nodos Padre
+    SET @cMenuTasa = '';
+    SET @idOpeTasa = 0;
+    
+    IF EXISTS
+    (
+        SELECT 1
+        FROM SI_FINSoliCambioCredito
+        WHERE idSolicitud = @idSolicitud
+              AND idOperacion = 7
+    )
+    BEGIN
+        SET @cMenuTasa = 'Nuevo Cronograma';
+        SET @idOpeTasa = 1;
+    END;
+
+    INSERT INTO @tmpMenu
+    (
+        idMenu, 
+        cMenu, 
+        idPadre, 
+        idDescTipoDoc, 
+        nOrden,
+        idCategoriaArchivo, 
+        idArchivo, 
+        cExtension, 
+        idSecundario
+    )
+    SELECT idMenu = A.idPadre,
+        cMenu = CASE
+                    WHEN @idOpeTasa = 1 THEN 
+                        REPLACE(B.cDescTipoDoc, 'Reprogramación', @cMenuTasa)
+                    ELSE B.cDescTipoDoc
+                END,
+        idPadre = B.idPadre,
+        A.idPadre,
+        CASE WHEN B.cDescTipoDoc = 'DNI de Intervinientes' THEN 1 ELSE B.nOrden END,
+        0,
+        idArchivo = 0,
+        cExtension = '',
+        idSecundario = 0
+    FROM @tmpMenu A
+        INNER JOIN dbo.SI_FINDescTipoDoc B 
+            ON B.idDescTipoDoc = A.idPadre
+    GROUP BY A.idPadre, 
+        B.cDescTipoDoc, 
+        B.nOrden, 
+        B.idPadre;
+
+    -- SECCIÓN 12: Expedientes Grupo Solidario
+    IF (@cTipoSolicitud = 'grupal')
+    BEGIN
+        SELECT @FechaVigencia = cValVar
+        FROM dbo.SI_FinVariable
+        WHERE cVariable = 'dFechaVigenciaExpediente'
+              AND lVigente = 1;
+
+        SELECT @idGrupoSolidario = idGrupoSolidario
+        FROM dbo.SI_FinSolicitudCredGrupoSol
+        WHERE idSolicitudCredGrupoSol = @idSolicitud
+              AND dFecHoraRegistro >= @FechaVigencia;
+
+        IF @idGrupoSolidario IS NOT NULL
+        BEGIN
+            DELETE FROM @tmpMenu
+            WHERE idMenu IN ( 31 ) OR idPadre = 31;
+
+            -- Obtener IDs de descriptores
+            SET @idDescTipoDocInte =
+            (
+                SELECT idDescTipoDoc
+                FROM dbo.SI_FINDescTipoDoc
+                WHERE cDescTipoDoc = 'integrante'
+            );
+            SET @idDescTipoDocGrup =
+            (
+                SELECT idDescTipoDoc
+                FROM dbo.SI_FINDescTipoDoc
+                WHERE cDescTipoDoc = 'grupo'
+            );
+            SET @idTipoArchivoSBS =
+            (
+                SELECT idTipoArchivo
+                FROM dbo.SI_FinTipoArchivoEscaneado
+                WHERE cTipoArchivo = 'SBS'
+            );
+            SET @idArchivoFinal =
+            (
+                SELECT idTipoArchivo
+                FROM dbo.SI_FinTipoArchivoEscaneado
+                WHERE cTipoArchivo = 'Otros Documentos'
+                      AND idDescTipoDoc =
+                      (
+                          SELECT idDescTipoDoc
+                          FROM dbo.SI_FINDescTipoDoc
+                          WHERE cDescTipoDoc = 'Integrante'
+                      )
+            );
+
+            -- Actualizar nombre de grupo
+            UPDATE @tmpMenu
+            SET cMenu = CONCAT(
+                'GS: ',
+                (
+                    SELECT cNombre
+                    FROM dbo.SI_FinGrupoSolidario
+                    WHERE idGrupoSolidario = @idGrupoSolidario
+                )
+            )
+            WHERE idMenu = 33;
+
+            -- Integrantes
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT A.idSolicitud,
+                   B.cNombre,
+                   0,
+                   0,
+                   A.idSolicitud * 20,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN dbo.SI_FinCliente B 
+                    ON B.idCli = A.idCli
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- Nuevos expedientes
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT B.idDescTipoDoc,
+                   CONCAT('(C) ', B.cTipoArchivo),
+                   CASE
+                       WHEN A.idDescTipoDoc = @idDescTipoDocGrup THEN 33
+                       WHEN B.cTipoArchivo = 'DNI o Carnet de Extranjería' THEN D.idSolicitud * -3
+                       WHEN B.cTipoArchivo = 'SBS' THEN A.idSolicitud * -4
+                       ELSE D.idSolicitud
+                   END,
+                   B.idDescTipoDoc,
+                   CASE 
+                       WHEN A.idCli IS NULL THEN 320 + B.idTipoArchivo
+                       ELSE D.idSolicitud * 20 + B.idTipoArchivo * 0.001
+                   END,
+                   A.idCategoriaArchivo,
+                   A.idArchivos,
+                   C.cExtencion,
+                   0
+            FROM dbo.SI_FinArchivo A
+                INNER JOIN dbo.SI_FinTipoArchivoEscaneado B
+                    ON A.idArchivoForeing = B.idTipoArchivo
+                INNER JOIN dbo.SI_FINTipoArchivo C 
+                    ON A.idTipoArchivo = C.idTipoArchivo
+                LEFT JOIN dbo.SI_FinSolicitud D 
+                    ON A.idSolicitud = D.idSolicitud
+            WHERE A.lVigente = 1
+                  AND B.lVigente = 1
+                  AND (A.idDescTipoDoc = @idDescTipoDocInte OR A.idDescTipoDoc = @idDescTipoDocGrup)
+                  AND A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND (D.idEstado IS NULL OR D.idEstado != 3);
+
+            -- Documentos requeridos (grupo e integrante)
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT idDescTipoDoc,
+                   CONCAT('(R) ', cTipoArchivo),
+                   33,
+                   idDescTipoDoc,
+                   320 + idTipoArchivo,
+                   0,
+                   0,
+                   '.rdlc',
+                   0
+            FROM dbo.SI_FinTipoArchivoEscaneado
+            WHERE cTipoArchivo IN ( 'Cronograma Grupal' )
+                  AND EXISTS
+            (
+                SELECT 1
+                FROM SI_FinPlanPagosGrupoSol
+                WHERE idSolicitudCredGrupoSol = @idSolicitud
+            );
+
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT B.idDescTipoDoc,
+                   CONCAT('(R) ', B.cTipoArchivo),
+                   A.idSolicitud,
+                   B.idDescTipoDoc,
+                   A.idSolicitud * 20 + B.idTipoArchivo * 0.001,
+                   0,
+                   0,
+                   '.rdlc',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN dbo.SI_FinTipoArchivoEscaneado B
+                    ON B.cTipoArchivo IN ( 'Plan de Pagos', 'Hoja de Resumen' )
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3
+                  AND EXISTS
+            (
+                SELECT 1
+                FROM dbo.SI_FinPlanPagosSolicitud C
+                WHERE C.idSolicitud = A.idSolicitud
+            );
+
+            -- Visitas vinculadas
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT A.idSolicitud * -1,
+                   'VISITA',
+                   A.idSolicitud,
+                   0,
+                   A.idSolicitud * @idArchivoFinal + 2,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT E.idVisita,
+                   CONCAT(
+                       ISNULL(G.cPerfil, 'SIN PERFIL'),
+                       ' - ',
+                       F.cWinUser,
+                       ' (',
+                       J.cNombre,
+                       ') ',
+                       CONVERT(VARCHAR(10), E.dtFechaVisita, 103)
+                   ),
+                   A.idSolicitud * -1,
+                   H.idDescTipoDoc,
+                   A.idSolicitud * @idArchivoFinal + 3,
+                   H.idCategoriaArchivo,
+                   E.idVisita,
+                   '.jpg',
+                   0
+            FROM dbo.SI_FINVisita E
+                INNER JOIN dbo.SI_FINTipoVisita J 
+                    ON J.idTipoVisita = E.idTipoVisita
+                INNER JOIN dbo.SI_FinUsuario F 
+                    ON F.idUsuario = E.idUsuario
+                LEFT JOIN dbo.SI_FinPerfil G 
+                    ON G.idPerfil = E.idPerfil
+                CROSS JOIN dbo.SI_FINDescTipoDoc H
+                LEFT JOIN dbo.SI_FINTipoVisita I 
+                    ON I.idTipoVisita = E.idTipoVisita
+                LEFT JOIN dbo.SI_FinSolicitud A
+                    ON E.idCliente = A.idCli
+                       AND A.idSolicitudCredGrupoSol = @idSolicitud
+            WHERE E.idSolicitudCredGrupoSol = @idSolicitud
+                  AND H.cDescTipoDoc = 'VISITA'
+                  AND H.lVigente = 1
+                  AND I.cNombre != 'Visita Post desembolso'
+                  AND (A.idEstado IS NULL OR A.idEstado != 3);
+
+            -- Visitas post desembolso
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT A.idSolicitud * -2,
+                   'VISITA POST DESEMBOLSO',
+                   A.idSolicitud,
+                   0,
+                   A.idSolicitud * @idArchivoFinal + 4,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT E.idVisita,
+                   CONCAT(
+                       ISNULL(G.cPerfil, 'SIN PERFIL'),
+                       ' - ',
+                       F.cWinUser,
+                       ' (',
+                       J.cNombre,
+                       ') ',
+                       CONVERT(VARCHAR(10), E.dtFechaVisita, 103)
+                   ),
+                   A.idSolicitud * -2,
+                   H.idDescTipoDoc,
+                   A.idSolicitud * @idArchivoFinal + 5,
+                   H.idCategoriaArchivo,
+                   E.idVisita,
+                   '.jpg',
+                   0
+            FROM dbo.SI_FINVisita E
+                INNER JOIN dbo.SI_FINTipoVisita J 
+                    ON J.idTipoVisita = E.idTipoVisita
+                INNER JOIN dbo.SI_FinUsuario F 
+                    ON F.idUsuario = E.idUsuario
+                LEFT JOIN dbo.SI_FinPerfil G 
+                    ON G.idPerfil = E.idPerfil
+                CROSS JOIN dbo.SI_FINDescTipoDoc H
+                LEFT JOIN dbo.SI_FINTipoVisita I 
+                    ON I.idTipoVisita = E.idTipoVisita
+                LEFT JOIN dbo.SI_FinSolicitud A
+                    ON E.idCliente = A.idCli
+                       AND A.idSolicitudCredGrupoSol = @idSolicitud
+            WHERE E.idSolicitudCredGrupoSol = @idSolicitud
+                  AND H.cDescTipoDoc = 'VISITA'
+                  AND H.lVigente = 1
+                  AND I.cNombre = 'Visita Post desembolso'
+                  AND (A.idEstado IS NULL OR A.idEstado != 3);
+
+            -- AGRUPADOR DNI
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT A.idSolicitud * -3,
+                   'DNI INTEGRANTE',
+                   A.idSolicitud,
+                   0,
+                   A.idSolicitud * 20 + 0.001,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- DNI
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   '(R) Consulta RENIEC',
+                   A.idSolicitud * -3,
+                   42,
+                   A.idSolicitud * 20 + 0.002,
+                   2,
+                   0,
+                   '.rdlc',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- AGRUPADOR CENTRAL DE RIESGOS
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT A.idSolicitud * -4,
+                   'CENTRAL DE RIESGOS',
+                   A.idSolicitud,
+                   0,
+                   A.idSolicitud * 20 + @idTipoArchivoSBS * 0.001 - 0.0001,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- Posicion Integral
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   CONCAT(
+                       '(R) ',
+                       B.cNombreArchivo COLLATE Modern_Spanish_CI_AS,
+                       ' ',
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ),
+                   A.idSolicitud * -4,
+                   B.idDescTipoDoc,
+                   A.idSolicitud * 20 + @idTipoArchivoSBS * 0.001 + 0.0001,
+                   B.idCategoriaArchivo,
+                   B.idArchivos,
+                   '.rdlc',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN @tmpArchivos B
+                    ON B.idSolicitud = A.idSolicitud
+                       AND B.idCli = A.idCli
+                       AND B.idTipoArchivo = 5
+                       AND B.idModulo = 1
+                       AND B.idCategoriaArchivo = 2
+                       AND B.idDescTipoDoc = 41
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- Sentinel
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   CONCAT(
+                       '(C) ',
+                       C.cTipoArchivo COLLATE Modern_Spanish_CI_AS,
+                       ' ',
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ),
+                   A.idSolicitud * -4,
+                   C.idDescTipoDoc,
+                   A.idSolicitud * 20 + @idTipoArchivoSBS * 0.001 + 0.0002,
+                   B.idCategoriaArchivo,
+                   B.idArchivos,
+                   '.pdf',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN @tmpArchivos B
+                    ON B.idSolicitud = A.idSolicitud
+                       AND B.idCli = A.idCli
+                       AND B.idTipoArchivo = 3
+                       AND B.idModulo = 1
+                       AND B.idCategoriaArchivo = 5
+                       AND B.idDescTipoDoc = 10
+                       AND B.idArchivoForeing = 52
+                INNER JOIN dbo.SI_FinTipoArchivoEscaneado C
+                    ON C.idTipoArchivo = B.idArchivoForeing
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- Sentinel sabio financiero
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   CONCAT(
+                       '(C) ',
+                       C.cTipoArchivo,
+                       ' ',
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ),
+                   A.idSolicitud,
+                   C.idDescTipoDoc,
+                   A.idSolicitud * 20 + @idArchivoFinal * 0.001 + 0.0001,
+                   B.idCategoriaArchivo,
+                   B.idArchivos,
+                   '.pdf',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN @tmpArchivos B
+                    ON B.idSolicitud = A.idSolicitud
+                       AND B.idCli = A.idCli
+                       AND B.idTipoArchivo = 3
+                       AND B.idModulo = 1
+                       AND B.idCategoriaArchivo = 5
+                       AND B.idDescTipoDoc = 107
+                       AND B.idArchivoForeing = 138
+                INNER JOIN dbo.SI_FinTipoArchivoEscaneado C
+                    ON C.idTipoArchivo = B.idArchivoForeing
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+                  AND A.idEstado != 3;
+
+            -- Actualizar posicion
+            UPDATE A
+            SET A.nOrden = 321 + 0.1
+            FROM @tmpMenu A
+            WHERE A.idDescTipoDoc = 37;
+        END;
+        ELSE
+        BEGIN
+            -- Menu padre
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT B.idCli,
+                   B.cNombre,
+                   0,
+                   0,
+                   A.idSolicitud * 10,
+                   0,
+                   0,
+                   '',
+                   0
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN dbo.SI_FinCliente B ON B.idCli = A.idCli
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud
+            GROUP BY B.idCli, 
+                B.cNombre, 
+                A.idSolicitud;
+
+            -- DNI
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   'DNI',
+                   A.idCli,
+                   42,
+                   A.idSolicitud * 10 + 1,
+                   2,
+                   0,
+                   '.rdlc',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud;
+
+            -- Posicion Integral
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   cDescMenu = CONCAT(
+                       '(R) ',
+                       B.cNombreArchivo,
+                       ' ',
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ),
+                   B.idCli,
+                   B.idDescTipoDoc,
+                   A.idSolicitud * 10 + 2,
+                   B.idCategoriaArchivo,
+                   B.idArchivos,
+                   '.rdlc',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN @tmpArchivos B
+                    ON B.idSolicitud = A.idSolicitud
+                       AND B.idCli = A.idCli
+                       AND B.idTipoArchivo = 5
+                       AND B.idModulo = 1
+                       AND B.idCategoriaArchivo = 2
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud;
+
+            -- Sentinel
+            INSERT INTO @tmpMenu
+            (
+                idMenu, 
+                cMenu, 
+                idPadre, 
+                idDescTipoDoc, 
+                nOrden,
+                idCategoriaArchivo, 
+                idArchivo, 
+                cExtension, 
+                idSecundario
+            )
+            SELECT -1,
+                   cDescMenu = CONCAT(
+                       '(C) ',
+                       C.cTipoArchivo,
+                       ' ',
+                       CONVERT(VARCHAR(10), ISNULL(B.dFechaMod, B.dFechaReg), 103)
+                   ),
+                   B.idCli,
+                   C.idDescTipoDoc,
+                   A.idSolicitud * 10 + 3,
+                   B.idCategoriaArchivo,
+                   B.idArchivos,
+                   '.pdf',
+                   A.idCli
+            FROM dbo.SI_FinSolicitud A
+                INNER JOIN @tmpArchivos B
+                    ON B.idSolicitud = A.idSolicitud
+                       AND B.idCli = A.idCli
+                       AND B.idTipoArchivo = 3
+                       AND B.idModulo = 1
+                       AND B.idCategoriaArchivo = 5
+                INNER JOIN dbo.SI_FinTipoArchivoEscaneado C
+                    ON C.idTipoArchivo = B.idArchivoForeing
+            WHERE A.idSolicitudCredGrupoSol = @idSolicitud;
+        END;
+    END;
+
+    -- SECCIÓN 13: Filtrar Expedientes RETENCION
+    SELECT @_idDescTipoDoc = idDescTipoDoc
+    FROM SI_FINDescTipoDoc
+    WHERE cDescTipoDoc = 'TASAS NEGOCIABLES - POST DESEMBOLSO';
+    
+    SELECT @_idOperacion = idOperacion
+    FROM SI_FinOperacion
+    WHERE cOperacion = 'RETENCION CON CAMBIO DE TASA';
+
+    SELECT @_idTipoSolTasaDesembolso = idTipoSolTasaDesembolso
+    FROM SI_FinTasaNegociada
+    WHERE idSolicitud = @idSolicitud;
+
+    IF (@_idOperacionSOL != @_idOperacion AND @_idTipoSolTasaDesembolso = 2)
+    BEGIN
+        DELETE @tmpMenu
+        WHERE idDescTipoDoc = @_idDescTipoDoc;
+    END;
+
+    -- Actualizar orden para individual
+    IF (@cTipoSolicitud = 'individual')
+    BEGIN
+        UPDATE @tmpMenu 
+            SET nOrden = 2 
+        WHERE idDescTipoDoc = 32;
+        
+        UPDATE @tmpMenu 
+            SET nOrden = 3 
+        WHERE idDescTipoDoc = 96;
+
+        UPDATE @tmpMenu 
+            SET nOrden = 4 
+        WHERE idDescTipoDoc = 10;
+
+        UPDATE @tmpMenu 
+            SET nOrden = 5 
+            WHERE cMenu LIKE 'TASAS NEGOCIABLES%';
+
+        UPDATE @tmpMenu 
+            SET nOrden = 7 
+        WHERE idDescTipoDoc = 29;
+
+        UPDATE @tmpMenu 
+            SET nOrden = 102 
+        WHERE cMenu LIKE '%Expediente Evaluación Credirapp Pro%';
+    END;
+
+    -- SECCIÓN 14: Resultado Final
+    IF (@cTipoSolicitud = 'individual' OR @idGrupoSolidario IS NULL)
+    BEGIN
+        SELECT idMenu,
+               cMenu = REPLACE(cMenu, '()', ''),
+               idPadre = ISNULL(idPadre, 0),
+               idDescTipoDoc,
+               nOrden,
+               idCategoriaArchivo,
+               idArchivo,
+               cExtension,
+               idSecundario
+        FROM @tmpMenu
+        ORDER BY idPadre, 
+            nOrden, 
+            idArchivo;
+    END;
+    ELSE
+    BEGIN
+        SELECT idMenu,
+               cMenu = REPLACE(cMenu, '()', ''),
+               idPadre = ISNULL(idPadre, 0),
+               idDescTipoDoc,
+               nOrden,
+               idCategoriaArchivo,
+               idArchivo,
+               cExtension,
+               idSecundario
+        FROM @tmpMenu
+        ORDER BY nOrden, 
+        idArchivo;
+    END;
+
+    -- Datos de la Solicitud
+    IF (@cTipoSolicitud = 'individual')
+    BEGIN
+        EXEC CRE_RetDatosSolicitudCre_SP @idSolicitud;
+    END;
+    ELSE
+    BEGIN
+        EXEC CRE_DatosSolicitudGrupoSolidario_SP @idSolicitud;
+    END;
+END;
+GO
+GRANT EXECUTE ON [dbo].[GEN_ObtenerMenuExpediente_SP] TO [Rol_Fin]
+GO
