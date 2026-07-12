@@ -16,6 +16,7 @@ export class useGetMe {
             cEmail: user.getEmail(),
             cNombre: user.getNombre(),
             perfiles: user.getPerfiles(),
+            permisos: user.getPermissions(),
         };
     }
 }

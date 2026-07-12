@@ -1,9 +1,35 @@
 // src/infrastructure/mappers/User.Mapper.ts
-import { entUser } from "../../domain/entities/ent.User";
+import { entUser, Permission } from "../../domain/entities/ent.User";
 
 export class UserMapper {
     public static toDomain(raw: any): entUser {
         // Aquí conviertes el objeto sucio de Prisma a tu Entidad limpia
+        
+        // Extraemos los permisos únicos de todos los roles del usuario
+        const permissionsSet = new Set();
+        const permissions: Permission[] = [];
+
+        if (raw.perfiles) {
+            raw.perfiles.forEach((perfil: any) => {
+                if (perfil.rol && perfil.rol.detallePermisos) {
+                    perfil.rol.detallePermisos.forEach((dp: any) => {
+                        if (dp.lVigente && dp.lActivo && dp.permiso) {
+                            permissionsSet.add(dp.permiso.idPermiso);
+                            permissions.push({
+                                idPermiso: dp.permiso.idPermiso,
+                                cNombrePermiso: dp.permiso.cNombrePermiso
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Eliminamos duplicados basándonos en el idPermiso
+        const uniquePermissions = permissions.filter((p, index, self) =>
+            index === self.findIndex((t) => t.idPermiso === p.idPermiso)
+        );
+
         return new entUser(
             raw.idUser,
             raw.cEmail,
@@ -17,6 +43,7 @@ export class UserMapper {
                 idProfile: a.idUsuarioUni,
                 dExpiresAt: a.dExpiresAt
             })),
+            uniquePermissions,
             raw.lVigente,
             raw.lActivo
         );

@@ -27,7 +27,20 @@ export class repoUserPrisma implements portUserRepository {
         const userDb = await prisma.user.findUnique({
             where: { idUser: id, lActivo: true, lVigente: true },
             include: {
-                perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
+                perfiles: { 
+                    include: { 
+                        rol: { 
+                            include: { 
+                                detallePermisos: { 
+                                    include: { permiso: true },
+                                    where: { lVigente: true, lActivo: true }
+                                } 
+                            } 
+                        }, 
+                        oficina: true 
+                    }, 
+                    where: { lVigente: true, lActivo: true } 
+                }
             }
         });
         //console.log("Resultado de la consulta a la base de datos:", userDb);
