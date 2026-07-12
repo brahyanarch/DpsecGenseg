@@ -9,6 +9,7 @@ import { useUpdateProfileStatus } from "../../../aplication/useCases/auth/use.Up
 import { useSoftDeleteUser } from "../../../aplication/useCases/auth/use.SoftDeleteUser";
 import { useSoftDeleteProfile } from "../../../aplication/useCases/auth/use.SoftDeleteProfile";
 import { useGetMe } from "../../../aplication/useCases/auth/use.GetMe";
+import { useSwitchProfile } from "../../../aplication/useCases/auth/use.SwitchProfile";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
 import { appError } from "../../../domain/exceptions/app.Error";
 
@@ -22,6 +23,7 @@ export class AuthController {
     private readonly _softDeleteUserUseCase: useSoftDeleteUser;
     private readonly _softDeleteProfileUseCase: useSoftDeleteProfile;
     private readonly _getMeUseCase: useGetMe;
+    private readonly _switchProfileUseCase: useSwitchProfile;
 
     constructor() {
         // Centralizamos la creación de dependencias aquí
@@ -34,6 +36,7 @@ export class AuthController {
         this._softDeleteUserUseCase = new useSoftDeleteUser(userRepo);
         this._softDeleteProfileUseCase = new useSoftDeleteProfile(userRepo);
         this._getMeUseCase = new useGetMe(userRepo);
+        this._switchProfileUseCase = new useSwitchProfile(userRepo);
     }
 
     public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -130,6 +133,27 @@ export class AuthController {
             }
 
             const result = await this._getMeUseCase.execute(idUser);
+
+            res.status(200).json({ nSuccess: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public switchProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const idUser = Number(req.user?.nId);
+            const { idActiveProfile } = req.body;
+
+            if (!idUser) {
+                throw new appError("40101", "Usuario no autenticado", "User not authenticated", true);
+            }
+
+            if (!idActiveProfile) {
+                throw new appError("40001", "El idActiveProfile es requerido", "idActiveProfile is required", true);
+            }
+
+            const result = await this._switchProfileUseCase.execute(idUser, Number(idActiveProfile));
 
             res.status(200).json({ nSuccess: true, data: result });
         } catch (error) {

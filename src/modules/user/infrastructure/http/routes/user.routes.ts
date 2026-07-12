@@ -11,6 +11,7 @@ const authController = new AuthController();
 router.post("/login", authController.login);
 router.post("/register", validateUserRegister, authController.register);
 router.get("/me", authenticate, authController.me);
+router.post("/switch-profile", authenticate, authController.switchProfile);
 router.post("/assign-role", authController.assignRole);
 router.patch("/users/:idUser/status", authController.updateUserStatus);
 router.delete("/users/:idUser", authController.softDeleteUser);

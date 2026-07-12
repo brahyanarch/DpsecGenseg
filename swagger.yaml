@@ -79,6 +79,37 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /v1/auth/switch-profile:
+    post:
+      tags:
+        - Auth
+      summary: Cambiar perfil activo
+      description: Permite cambiar el perfil activo del usuario sin requerir contraseña. Emite un nuevo token con el nuevo idActiveProfile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idActiveProfile]
+              properties:
+                idActiveProfile:
+                  type: integer
+                  example: 3
+      responses:
+        '200':
+          description: Perfil cambiado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '401':
+          $ref: '#/components/responses/AppError'
+        '403':
+          $ref: '#/components/responses/AppError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /v1/auth/assign-role:
     post:
       tags:
