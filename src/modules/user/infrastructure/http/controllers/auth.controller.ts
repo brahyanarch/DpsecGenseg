@@ -152,16 +152,29 @@ export class AuthController {
                 throw new appError("50001", "Contexto de seguridad no resuelto", "Security context missing", true);
             }
 
-            const users = await this._getUsersUseCase.execute(securityContext);
-            
-            // Mapeamos cada usuario a un formato de respuesta limpio (sin contraseñas)
-            const responseData = users.map(user => UserMapper.toResponse(user));
+            // Parámetros de paginación desde el query string
+            const page = Number(req.query.page) || 1;
+            const limit = Number(req.query.limit) || 10;
 
-            res.status(200).json({ nSuccess: true, data: responseData });
+            const result = await this._getUsersUseCase.execute(securityContext, page, limit);
+
+            // Mapeamos la lista de usuarios para enviar la respuesta limpia
+            const usersResponse = result.users.map(user => UserMapper.toResponse(user));
+
+            res.status(200).json({ 
+                nSuccess: true, 
+                data: {
+                    users: usersResponse,
+                    total: result.total,
+                    page: result.page,
+                    totalPages: result.totalPages
+                }
+            });
         } catch (error) {
             next(error);
         }
     };
+
 
     public switchProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {

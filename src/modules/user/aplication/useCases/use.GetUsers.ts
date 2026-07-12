@@ -5,8 +5,16 @@ import { SecurityContext } from "../../../../shared/types/security";
 export class useGetUsers {
     constructor(private readonly _userRepo: portUserRepository) {}
 
-    public async execute(context: SecurityContext): Promise<any[]> {
-        // El caso de uso delega la lógica de filtrado al repositorio pasando el contexto de seguridad
-        return await this._userRepo.findUsersByScope(context);
+    public async execute(context: SecurityContext, page: number, limit: number): Promise<{ users: any[], total: number, page: number, totalPages: number }> {
+        const skip = (page - 1) * limit;
+        
+        const { users, total } = await this._userRepo.findUsersByScope(context, skip, limit);
+
+        return {
+            users,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        };
     }
 }

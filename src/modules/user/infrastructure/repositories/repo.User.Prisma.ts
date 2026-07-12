@@ -182,7 +182,7 @@ export class repoUserPrisma implements portUserRepository {
         return !!registro;
     }
 
-    async findUsersByScope(context: SecurityContext): Promise<entUser[]> {
+    async findUsersByScope(context: SecurityContext, skip: number, take: number): Promise<{ users: entUser[], total: number }> {
         // Filtro base: solo usuarios vigentes
         const where: any = { lVigente: true };
 
@@ -197,16 +197,24 @@ export class repoUserPrisma implements portUserRepository {
             };
         }
 
-        
-        const usersDb = await prisma.user.findMany({
-            where,
-            include: {
-                perfiles: { 
-                    include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true }
+        // Ejecutamos el conteo y la búsqueda en paralelo para optimizar
+        const [total, usersDb] = await prisma.$transaction([
+            prisma.user.count({ where }),
+            prisma.user.findMany({
+                where,
+                skip,
+                take,
+                orderBy: { cNombre: 'asc' }, // Ordenamos por nombre para consistencia en la paginación
+                include: {
+                    perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
                 }
-            }
-        });
+            })
+        ]);
 
-        return usersDb.map(u => UserMapper.toDomain(u));
+        return {
+            users: usersDb.map(u => UserMapper.toDomain(u)),
+            total
+        };
     }
-}
+    }
+

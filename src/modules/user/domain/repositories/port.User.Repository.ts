@@ -20,5 +20,5 @@ export interface portUserRepository {
     existsRol(idRol: number): Promise<boolean>;
     existsOficina(idOficina: number): Promise<boolean>;
     hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean>;
-    findUsersByScope(context: SecurityContext): Promise<entUser[]>;
+    findUsersByScope(context: SecurityContext, skip: number, take: number): Promise<{ users: entUser[], total: number }>;
 }

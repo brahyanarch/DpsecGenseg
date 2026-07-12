@@ -41,7 +41,8 @@ export class UserMapper {
                 idOficina: a.idOficina,
                 cNombreOficina: a.oficina.cNombreOficina,
                 idProfile: a.idUsuarioUni,
-                dExpiresAt: a.dExpiresAt
+                dExpiresAt: a.dExpiresAt,
+                lActivo: a.lActivo
             })),
             uniquePermissions,
             raw.lVigente,
@@ -54,6 +55,7 @@ export class UserMapper {
             idUser: user.getId(),
             cEmail: user.getEmail(),
             cNombre: user.getNombre(),
+            lActivo: user.isActivo(),
             perfiles: user.getPerfiles(),
             permissions: user.getPermissions()
         };

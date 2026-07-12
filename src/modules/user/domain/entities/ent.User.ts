@@ -7,6 +7,7 @@ export interface Perfil {
     cNombreOficina: string;
     idProfile: number | null;
     dExpiresAt: Date | null;
+    lActivo: boolean;
 }
 
 export interface Permission {
