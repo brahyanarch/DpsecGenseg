@@ -8,7 +8,9 @@ import { useUpdateUserStatus } from "../../../aplication/useCases/auth/use.Updat
 import { useUpdateProfileStatus } from "../../../aplication/useCases/auth/use.UpdateProfileStatus";
 import { useSoftDeleteUser } from "../../../aplication/useCases/auth/use.SoftDeleteUser";
 import { useSoftDeleteProfile } from "../../../aplication/useCases/auth/use.SoftDeleteProfile";
+import { useGetMe } from "../../../aplication/useCases/auth/use.GetMe";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
+import { appError } from "../../../domain/exceptions/app.Error";
 
 export class AuthController {
     // Declaramos los casos de uso como propiedades privadas
@@ -19,6 +21,7 @@ export class AuthController {
     private readonly _updateProfileStatusUseCase: useUpdateProfileStatus;
     private readonly _softDeleteUserUseCase: useSoftDeleteUser;
     private readonly _softDeleteProfileUseCase: useSoftDeleteProfile;
+    private readonly _getMeUseCase: useGetMe;
 
     constructor() {
         // Centralizamos la creación de dependencias aquí
@@ -30,6 +33,7 @@ export class AuthController {
         this._updateProfileStatusUseCase = new useUpdateProfileStatus(userRepo);
         this._softDeleteUserUseCase = new useSoftDeleteUser(userRepo);
         this._softDeleteProfileUseCase = new useSoftDeleteProfile(userRepo);
+        this._getMeUseCase = new useGetMe(userRepo);
     }
 
     public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -112,6 +116,22 @@ export class AuthController {
             await this._softDeleteProfileUseCase.execute(idUsuarioUni);
 
             res.status(200).json({ nSuccess: true, cMessage: "Perfil eliminado correctamente" });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const idUser = Number(req.user?.nId);
+
+            if (!idUser) {
+                throw new appError("40101", "Usuario no autenticado", "User not authenticated", true);
+            }
+
+            const result = await this._getMeUseCase.execute(idUser);
+
+            res.status(200).json({ nSuccess: true, data: result });
         } catch (error) {
             next(error);
         }

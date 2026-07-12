@@ -9,6 +9,11 @@ export interface Perfil {
     dExpiresAt: Date | null;
 }
 
+export interface Permission {
+    idPermiso: number;
+    cNombrePermiso: string;
+}
+
 export class entUser {
     constructor(
         private readonly _idUser: number,
@@ -16,6 +21,7 @@ export class entUser {
         private readonly _cPassword: string | null,
         private readonly _cNombre: string | null,
         private readonly _perfiles: Perfil[],
+        private readonly _permissions: Permission[],
         private readonly _idActiveProfile: number | null = null,
         private readonly _lVigente: boolean = true,
         private readonly _lActivo: boolean = true,
@@ -45,5 +51,9 @@ export class entUser {
 
     public getPerfiles(): Perfil[] {
         return [...this._perfiles]; 
+    }
+
+    public getPermissions(): Permission[] {
+        return [...this._permissions];
     }
 }
