@@ -21,7 +21,7 @@ export class useRegister {
 
         // 3. Crear entidad y guardar
         // Asumiendo que el ID es generado por la BD, pasamos 0 o null
-        const newUser = new entUser(0, cEmail, hashedPwd, cNombre, []);
+        const newUser = new entUser(0, cEmail, hashedPwd, cNombre, [], []);
         await this._userRepository.save(newUser);
 
         return { message: "Usuario registrado exitosamente" };

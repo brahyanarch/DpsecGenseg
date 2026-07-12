@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import yaml from 'yamljs';
 import { errorHandler } from './modules/user/infrastructure/http/middlewares/error.middleware';
 import userRoutes from './modules/user/infrastructure/http/routes/user.routes';
+import accessControlRoutes from './modules/accessControl/infrastructure/http/routes/accessControl.routes';
 
 dotenv.config()
 const cors = require('cors')
@@ -21,6 +22,7 @@ app.use(cors());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(errorHandler);
 app.use('/v1/auth', userRoutes);
+app.use('/v1/access-control', accessControlRoutes);
 app.use(errorHandler);
 
 export default app;
