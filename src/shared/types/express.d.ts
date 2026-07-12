@@ -1,13 +1,12 @@
 // src/shared/types/express.d.ts
 import { Request } from 'express';
+import { SecurityContext } from './security';
 
 declare global {
     namespace Express {
         interface Request {
-            user?: {
-                sub: number; // Tu idUser
-                activeProfile?: number; // Tu idUsuarioUni
-            };
+            user?: any;
+            securityContext?: SecurityContext;
         }
     }
 }

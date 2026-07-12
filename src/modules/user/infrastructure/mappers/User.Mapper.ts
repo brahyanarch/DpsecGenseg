@@ -49,6 +49,16 @@ export class UserMapper {
         );
     }
 
+    public static toResponse(user: entUser) {
+        return {
+            idUser: user.getId(),
+            cEmail: user.getEmail(),
+            cNombre: user.getNombre(),
+            perfiles: user.getPerfiles(),
+            permissions: user.getPermissions()
+        };
+    }
+
     public static toPersistence(user: entUser) {
         return {
             cEmail: user.getEmail(),

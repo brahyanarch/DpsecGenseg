@@ -10,6 +10,8 @@ import { useSoftDeleteUser } from "../../../aplication/useCases/auth/use.SoftDel
 import { useSoftDeleteProfile } from "../../../aplication/useCases/auth/use.SoftDeleteProfile";
 import { useGetMe } from "../../../aplication/useCases/auth/use.GetMe";
 import { useSwitchProfile } from "../../../aplication/useCases/auth/use.SwitchProfile";
+import { useGetUsers } from "../../../aplication/useCases/use.GetUsers";
+import { UserMapper } from "../../mappers/User.Mapper";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
 import { appError } from "../../../domain/exceptions/app.Error";
 
@@ -24,6 +26,7 @@ export class AuthController {
     private readonly _softDeleteProfileUseCase: useSoftDeleteProfile;
     private readonly _getMeUseCase: useGetMe;
     private readonly _switchProfileUseCase: useSwitchProfile;
+    private readonly _getUsersUseCase: useGetUsers;
 
     constructor() {
         // Centralizamos la creación de dependencias aquí
@@ -37,6 +40,7 @@ export class AuthController {
         this._softDeleteProfileUseCase = new useSoftDeleteProfile(userRepo);
         this._getMeUseCase = new useGetMe(userRepo);
         this._switchProfileUseCase = new useSwitchProfile(userRepo);
+        this._getUsersUseCase = new useGetUsers(userRepo);
     }
 
     public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -135,6 +139,25 @@ export class AuthController {
             const result = await this._getMeUseCase.execute(idUser);
 
             res.status(200).json({ nSuccess: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    public getUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const securityContext = (req as any).securityContext;
+
+            if (!securityContext) {
+                throw new appError("50001", "Contexto de seguridad no resuelto", "Security context missing", true);
+            }
+
+            const users = await this._getUsersUseCase.execute(securityContext);
+            
+            // Mapeamos cada usuario a un formato de respuesta limpio (sin contraseñas)
+            const responseData = users.map(user => UserMapper.toResponse(user));
+
+            res.status(200).json({ nSuccess: true, data: responseData });
         } catch (error) {
             next(error);
         }

@@ -5,6 +5,8 @@ import { entUser } from "../../domain/entities/ent.User";
 import { UserMapper } from "../mappers/User.Mapper"; 
 import { AssignRoleDTO } from "../http/dto/dto.AssignRole";
 import { appError } from "../../domain/exceptions/app.Error";
+import { SecurityContext } from "../../../../shared/types/security";
+import { Console } from "console";
 
 export class repoUserPrisma implements portUserRepository {
     
@@ -178,5 +180,33 @@ export class repoUserPrisma implements portUserRepository {
             }
         });
         return !!registro;
+    }
+
+    async findUsersByScope(context: SecurityContext): Promise<entUser[]> {
+        // Filtro base: solo usuarios vigentes
+        const where: any = { lVigente: true };
+
+        // Si el scope es LOCAL, filtramos estrictamente por la oficina del perfil activo
+        if (context.scope === 'LOCAL' && context.idOficina) {
+            where.perfiles = {
+                some: {
+                    idOficina: context.idOficina,
+                    lVigente: true,
+                    lActivo: true
+                }
+            };
+        }
+
+        
+        const usersDb = await prisma.user.findMany({
+            where,
+            include: {
+                perfiles: { 
+                    include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true }
+                }
+            }
+        });
+
+        return usersDb.map(u => UserMapper.toDomain(u));
     }
 }

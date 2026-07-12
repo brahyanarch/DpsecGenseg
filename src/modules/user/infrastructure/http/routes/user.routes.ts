@@ -3,6 +3,7 @@ import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { validateUserRegister } from "../middlewares/user-validator.middleware";
 import { authenticate } from "../middlewares/auth.middleware";
+import { resolveScope } from "../middlewares/scope.middleware";
 
 const router = Router();
 const authController = new AuthController();
@@ -12,6 +13,7 @@ router.post("/login", authController.login);
 router.post("/register", validateUserRegister, authController.register);
 router.get("/me", authenticate, authController.me);
 router.post("/switch-profile", authenticate, authController.switchProfile);
+router.get("/users", authenticate, resolveScope, authController.getUsers);
 router.post("/assign-role", authController.assignRole);
 router.patch("/users/:idUser/status", authController.updateUserStatus);
 router.delete("/users/:idUser", authController.softDeleteUser);

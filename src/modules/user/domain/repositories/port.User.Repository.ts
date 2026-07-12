@@ -1,6 +1,7 @@
 // src/modules/user/domain/repositories/port.User.Repository.ts
 import { AssignRoleDTO } from "../../infrastructure/http/dto/dto.AssignRole";
 import { entUser } from "../entities/ent.User";
+import { SecurityContext } from "../../../../shared/types/security";
 
 export interface portUserRepository {
     // Definición de métodos de "Puerto"
@@ -19,4 +20,5 @@ export interface portUserRepository {
     existsRol(idRol: number): Promise<boolean>;
     existsOficina(idOficina: number): Promise<boolean>;
     hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean>;
+    findUsersByScope(context: SecurityContext): Promise<entUser[]>;
 }

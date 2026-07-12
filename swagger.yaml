@@ -142,6 +142,32 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /v1/auth/users:
+    get:
+      tags:
+        - Usuarios
+      summary: Listar usuarios
+      description: Devuelve la lista de usuarios. El alcance de la visibilidad depende del perfil activo: Administrador Central ve todos, otros ven solo los de su oficina.
+      responses:
+        '200':
+          description: Lista de usuarios obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nSuccess:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/AppError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /v1/auth/users/{idUser}/status:
     patch:
       tags:
@@ -544,3 +570,20 @@ components:
             cTechnicalDetails:
               type: string
               example: lActivo
+
+    UserResponse:
+      type: object
+      properties:
+        idUser:
+          type: integer
+          example: 1
+        cEmail:
+          type: string
+          example: usuario@genseg.com
+        cNombre:
+          type: string
+          example: Nombre Usuario
+        perfiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Perfil'
