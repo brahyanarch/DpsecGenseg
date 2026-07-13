@@ -12,7 +12,9 @@ import { useGetMe } from "../../../aplication/useCases/auth/use.GetMe";
 import { useSwitchProfile } from "../../../aplication/useCases/auth/use.SwitchProfile";
 import { useGetUsers } from "../../../aplication/useCases/use.GetUsers";
 import { UserMapper } from "../../mappers/User.Mapper";
+import { UserFilter } from "../../../../../shared/types/user-filter";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
+
 import { appError } from "../../../domain/exceptions/app.Error";
 
 export class AuthController {
@@ -95,11 +97,15 @@ export class AuthController {
         try {
             const idUsuarioUni = Number(req.params.idUsuarioUni);
             const { lActivo } = req.body;
+            
+            console.log(`[DEBUG] updateProfileStatus - Request: idUsuarioUni=${idUsuarioUni}, lActivo=${lActivo}`);
 
             await this._updateProfileStatusUseCase.execute(idUsuarioUni, lActivo);
 
+            console.log(`[DEBUG] updateProfileStatus - Success: profile ${idUsuarioUni} set to lActivo=${lActivo}`);
             res.status(200).json({ nSuccess: true, cMessage: "Estado del perfil actualizado correctamente" });
         } catch (error) {
+            console.error(`[DEBUG] updateProfileStatus - Error:`, error);
             next(error);
         }
     };
@@ -152,12 +158,18 @@ export class AuthController {
                 throw new appError("50001", "Contexto de seguridad no resuelto", "Security context missing", true);
             }
 
-            // Parámetros de paginación desde el query string
-            const page = Number(req.query.page) || 1;
-            const limit = Number(req.query.limit) || 10;
+            // Parámetros de filtros y paginación desde el query string
+            const filter: UserFilter = {
+                page: Number(req.query.page) || 1,
+                limit: Number(req.query.limit) || 10,
+                search: req.query.search as string,
+                lActivo: req.query.lActivo ? req.query.lActivo === 'true' : undefined,
+                sortBy: req.query.sortBy as string,
+                sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'asc'
+            };
 
-            const result = await this._getUsersUseCase.execute(securityContext, page, limit);
-
+            const result = await this._getUsersUseCase.execute(securityContext, filter);
+            
             // Mapeamos la lista de usuarios para enviar la respuesta limpia
             const usersResponse = result.users.map(user => UserMapper.toResponse(user));
 

@@ -2,6 +2,7 @@
 import { AssignRoleDTO } from "../../infrastructure/http/dto/dto.AssignRole";
 import { entUser } from "../entities/ent.User";
 import { SecurityContext } from "../../../../shared/types/security";
+import { UserFilter } from "../../../../shared/types/user-filter";
 
 export interface portUserRepository {
     // Definición de métodos de "Puerto"
@@ -20,5 +21,5 @@ export interface portUserRepository {
     existsRol(idRol: number): Promise<boolean>;
     existsOficina(idOficina: number): Promise<boolean>;
     hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean>;
-    findUsersByScope(context: SecurityContext, skip: number, take: number): Promise<{ users: entUser[], total: number }>;
+    findUsersByScope(context: SecurityContext, filter: UserFilter): Promise<{ users: entUser[], total: number }>;
 }

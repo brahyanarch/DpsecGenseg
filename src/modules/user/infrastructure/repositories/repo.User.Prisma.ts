@@ -6,26 +6,21 @@ import { UserMapper } from "../mappers/User.Mapper";
 import { AssignRoleDTO } from "../http/dto/dto.AssignRole";
 import { appError } from "../../domain/exceptions/app.Error";
 import { SecurityContext } from "../../../../shared/types/security";
-import { Console } from "console";
+import { UserFilter } from "../../../../shared/types/user-filter";
 
 export class repoUserPrisma implements portUserRepository {
     
     async findByEmail(cEmail: string): Promise<entUser | null> {
-
-        //console.log(`Buscando usuario por email: ${cEmail}`);
         const userDb = await prisma.user.findUnique({
             where: { cEmail: cEmail, lVigente: true },
             include: {
                 perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
             }
         });
-        //console.log("Resultado de la consulta a la base de datos:", userDb);
-
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
     async findById(id: number): Promise<entUser | null> {
-        //console.log(`Buscando usuario por ID: ${id}`);
         const userDb = await prisma.user.findUnique({
             where: { idUser: id, lActivo: true, lVigente: true },
             include: {
@@ -45,16 +40,11 @@ export class repoUserPrisma implements portUserRepository {
                 }
             }
         });
-        //console.log("Resultado de la consulta a la base de datos:", userDb);
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
    async save(user: entUser): Promise<void> {
-        // 1. Convertimos la Entidad a un formato que Prisma entienda
-        // (Esto debería estar en tu UserMapper)
         const userData = UserMapper.toPersistence(user);
-        //console.log("Datos a guardar en la base de datos:", userData);
-        // 2. Guardamos en la base de datos
         await prisma.user.create({
             data: userData
         });
@@ -132,11 +122,11 @@ export class repoUserPrisma implements portUserRepository {
         const oficina = await prisma.oficina.findUnique({
             where: { idOficina: idOficina, lVigente: true }
         });
-        return !!oficina; // Retorna true si existe, false si es null
+        return !!oficina;
     }
 
     public async existsUser(idUser: number): Promise<boolean> {
-        const user = await prisma.user.findUnique({ // Asegúrate del nombre de tu modelo
+        const user = await prisma.user.findUnique({
             where: { idUser: idUser, lVigente: true }
         });
 
@@ -182,11 +172,14 @@ export class repoUserPrisma implements portUserRepository {
         return !!registro;
     }
 
-    async findUsersByScope(context: SecurityContext, skip: number, take: number): Promise<{ users: entUser[], total: number }> {
+    async findUsersByScope(context: SecurityContext, filter: UserFilter): Promise<{ users: entUser[], total: number }> {
+        const { search, lActivo, sortBy, sortOrder, page = 1, limit = 10 } = filter;
+        const skip = (page - 1) * limit;
+
         // Filtro base: solo usuarios vigentes
         const where: any = { lVigente: true };
 
-        // Si el scope es LOCAL, filtramos estrictamente por la oficina del perfil activo
+        // Scope filter
         if (context.scope === 'LOCAL' && context.idOficina) {
             where.perfiles = {
                 some: {
@@ -197,14 +190,34 @@ export class repoUserPrisma implements portUserRepository {
             };
         }
 
+        // Advanced filter
+        if (search) {
+            where.OR = [
+                { cNombre: { contains: search, mode: 'insensitive' } },
+                { cEmail: { contains: search, mode: 'insensitive' } }
+            ];
+        }
+
+        if (lActivo !== undefined) {
+            where.lActivo = lActivo;
+        }
+
+        // Sorting
+        const orderBy: any = {};
+        if (sortBy) {
+            orderBy[sortBy] = sortOrder || 'asc';
+        } else {
+            orderBy.cNombre = 'asc';
+        }
+
         // Ejecutamos el conteo y la búsqueda en paralelo para optimizar
         const [total, usersDb] = await prisma.$transaction([
             prisma.user.count({ where }),
             prisma.user.findMany({
                 where,
                 skip,
-                take,
-                orderBy: { cNombre: 'asc' }, // Ordenamos por nombre para consistencia en la paginación
+                take: limit,
+                orderBy,
                 include: {
                     perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
                 }
@@ -216,5 +229,4 @@ export class repoUserPrisma implements portUserRepository {
             total
         };
     }
-    }
-
+}

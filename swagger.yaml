@@ -148,6 +148,23 @@ paths:
         - Usuarios
       summary: Listar usuarios
       description: Devuelve la lista de usuarios. El alcance de la visibilidad depende del perfil activo: Administrador Central ve todos, otros ven solo los de su oficina.
+      parameters:
+        - name: page
+          in: query
+          description: Número de página a recuperar.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Cantidad de registros por página.
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          example: 10
       responses:
         '200':
           description: Lista de usuarios obtenida correctamente
@@ -160,9 +177,21 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/UserResponse'
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserResponse'
+                      total:
+                        type: integer
+                        example: 150
+                      page:
+                        type: integer
+                        example: 1
+                      totalPages:
+                        type: integer
+                        example: 15
         '401':
           $ref: '#/components/responses/AppError'
         '500':
@@ -282,6 +311,63 @@ paths:
                 nSuccess: true
                 cMessage: Perfil eliminado correctamente
         '401':
+          $ref: '#/components/responses/AppError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1/access-control/roles:
+    get:
+      tags:
+        - AccessControl
+      summary: Listar Roles
+      description: Devuelve la lista de roles. El alcance de la visibilidad depende del perfil activo: Administrador Central ve todos, otros ven solo los de su oficina.
+      parameters:
+        - name: page
+          in: query
+          description: Número de página a recuperar.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Cantidad de registros por página.
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          example: 10
+      responses:
+        '200':
+          description: Lista de roles obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nSuccess:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      roles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RolResponse'
+                      total:
+                        type: integer
+                        example: 20
+                      page:
+                        type: integer
+                        example: 1
+                      totalPages:
+                        type: integer
+                        example: 2
+        '401':
+          $ref: '#/components/responses/AppError'
+        '403':
           $ref: '#/components/responses/AppError'
         '500':
           $ref: '#/components/responses/InternalError'
@@ -587,3 +673,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Perfil'
+
+    RolResponse:
+      type: object
+      properties:
+        idRol:
+          type: integer
+          example: 1
+        cNombreRol:
+          type: string
+          example: Administrador
+        cAbrevRol:
+          type: string
+          example: Admin
+        lActivo:
+          type: boolean
+          example: true

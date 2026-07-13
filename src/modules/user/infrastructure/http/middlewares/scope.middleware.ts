@@ -14,7 +14,14 @@ export const resolveScope = async (req: Request, res: Response, next: NextFuncti
         const profile = await prisma.usuarioUniversidad.findUnique({
             where: { idUsuarioUni: idActiveProfile },
             include: { 
-                rol: true,
+                rol: {
+                    include: {
+                        detallePermisos: {
+                            include: { permiso: true },
+                            where: { lVigente: true, lActivo: true }
+                        }
+                    }
+                },
                 oficina: true 
             }
         });
@@ -22,6 +29,9 @@ export const resolveScope = async (req: Request, res: Response, next: NextFuncti
         if (!profile || !profile.lVigente) {
             throw new appError("40302", "El perfil activo ya no es válido o ha sido eliminado", "Active profile is no longer valid", true);
         }
+
+        // Extraemos los nombres de los permisos
+        const permissions = profile.rol.detallePermisos.map(dp => dp.permiso.cNombrePermiso);
 
         // DEFINICIÓN de ALCANCE GLOBAL
         const isGlobalAdmin = profile.rol.cNombreRol === 'ADMINISTRADOR' && 
@@ -31,7 +41,8 @@ export const resolveScope = async (req: Request, res: Response, next: NextFuncti
             scope: isGlobalAdmin ? 'GLOBAL' : 'LOCAL',
             idOficina: profile.idOficina,
             idRol: profile.idRol,
-            cNombreRol: profile.rol.cNombreRol
+            cNombreRol: profile.rol.cNombreRol,
+            permissions: permissions
         };
 
         (req as any).securityContext = context;

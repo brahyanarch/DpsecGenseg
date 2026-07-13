@@ -2,6 +2,7 @@ import { prisma } from "../../../../shared/database/prisma.client";
 import { portAccessControlRepository } from "../../domain/repositories/port.AccessControl.Repository";
 import { entRol } from "../../domain/entities/ent.Rol";
 import { entPermiso } from "../../domain/entities/ent.Permiso";
+import { SecurityContext } from "../../../../shared/types/security";
 
 export class repoAccessControlPrisma implements portAccessControlRepository {
 
@@ -79,5 +80,40 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
             where: { lVigente: true }
         });
         return results.map(r => new entRol(r.idRol, r.cNombreRol, r.cAbrevRol, r.lActivo, r.lVigente));
+    }
+
+    async findRolesWithScope(context: SecurityContext, skip: number, take: number): Promise<{ roles: entRol[], total: number }> {
+        const where: any = { lVigente: true };
+
+        // Si el scope es LOCAL, solo vemos los roles que están asignados en nuestra oficina
+        if (context.scope === 'LOCAL' && context.idOficina) {
+            where.asignaciones = {
+                some: {
+                    idOficina: context.idOficina,
+                    lVigente: true,
+                    lActivo: true
+                }
+            };
+        }
+
+        const [total, rolesDb] = await prisma.$transaction([
+            prisma.rol.count({ where }),
+            prisma.rol.findMany({
+                where,
+                skip,
+                take,
+                orderBy: { cNombreRol: 'asc' },
+                include: {
+                    asignaciones: { 
+                        where: { lVigente: true, lActivo: true } 
+                    }
+                }
+            })
+        ]);
+
+        return {
+            roles: rolesDb.map(r => new entRol(r.idRol, r.cNombreRol, r.cAbrevRol, r.lActivo, r.lVigente)),
+            total
+        };
     }
 }

@@ -6,4 +6,5 @@ export interface portAccessControlRepository {
     createPermission(permiso: entPermiso): Promise<void>;
     findValidPermissions(): Promise<entPermiso[]>;
     findValidRoles(): Promise<entRol[]>;
+    findRolesWithScope(context: SecurityContext, skip: number, take: number): Promise<{ roles: entRol[], total: number }>;
 }
