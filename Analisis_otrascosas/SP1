@@ -279,15 +279,15 @@ BEGIN
               AND idSolicitud = @idSolicitud
           )
           OR (
-                 @cTipoSolicitud = 'grupal'
-                 AND idSolicitudCredGrupoSol = @idSolicitud
-             )
-             AND
-             (
-                 idDescTipoDoc = 19
-                 AND lVigente = 1
-                 OR idDescTipoDoc <> 19
-             );
+                @cTipoSolicitud = 'grupal'
+                AND idSolicitudCredGrupoSol = @idSolicitud
+            )
+            AND
+            (
+                idDescTipoDoc = 19
+                AND lVigente = 1
+                OR idDescTipoDoc <> 19
+            );
 
     -- Insertar desde la tabla temporal
     INSERT INTO @tmpArchivos
@@ -416,7 +416,7 @@ BEGIN
             END;
         END;
     END;
-    --Solicitudes ORIGEN TasaPost  
+    --Solicitudes ORIGEN TasaPost
     -- SECCIÓN 5: Tablas de trabajo para menú
     DECLARE @tmpMenu TABLE
     (
@@ -495,7 +495,7 @@ BEGIN
         FROM dbo.SI_FinCliIntervCre A
             INNER JOIN dbo.SI_FinCliente Cl
                 ON Cl.idCli = A.idCli
-                   AND Cl.lVigente = 1
+                AND Cl.lVigente = 1
             INNER JOIN dbo.SI_FinTipoIntervencionCre AA
                 ON AA.idTipoInterv = A.idTipoInterv
                    AND AA.idTipoInterv NOT IN ( 2, 4, 12 )
@@ -505,7 +505,7 @@ BEGIN
             CROSS JOIN dbo.SI_FINDescTipoDoc B
             INNER JOIN dbo.SI_FINDescTipoDoc C
                 ON C.idDescTipoDoc = B.idPadre
-                   AND C.lVigente = 1
+                AND C.lVigente = 1
             CROSS JOIN dbo.SI_FinExpediente E
             LEFT JOIN @tmpArchivos D
                 ON D.idCategoriaArchivo = B.idCategoriaArchivo
@@ -850,20 +850,20 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                AND ISNULL(T.idTipoSolTasaDesembolso, 1) = 1
     WHERE B.idSolicitud = @idSolicitud
     UNION ALL
-    /*Archivos TasaNegociada*/
+    -- Archivos TasaNegociada
     SELECT idMenu = B.idSolicitud,
            cDescMenu = CONCAT(
-                                 '(R) ',
-                                 B.cNombreArchivo,
-                                 ' ',
-                                 CASE
-                                     WHEN B.idDescTipoDoc = 19 THEN
-                                         ISNULL(B.cDetalleArchivo, '') + ' '
-                                         + FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                                     ELSE
-                                         FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                                 END
-                             ),
+               '(R) ',
+               B.cNombreArchivo,
+               ' ',
+               CASE
+                   WHEN B.idDescTipoDoc = 19 THEN
+                       ISNULL(B.cDetalleArchivo, '') + ' '
+                       + FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ELSE
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+               END
+           ),
            idPadre = C.idDescTipoDoc,
            A.idDescTipoDoc,
            nOrden = C.nOrden + A.idTipoArchivo * 30,
@@ -879,7 +879,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                                         B.lVigente
                                     ELSE
                                         1
-                                END --Muestra todos los lvigentes para opinión de riesgo
+                                END
         INNER JOIN dbo.SI_FINDescTipoDoc C
             ON C.idDescTipoDoc = B.idDescTipoDoc
         INNER JOIN dbo.SI_FINCategoriaArchivo D
@@ -887,7 +887,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                AND D.idCategoriaArchivo = B.idCategoriaArchivo
     WHERE B.idSolicitud = @idSolicitud
     UNION ALL
-    /*Central de Riesgos*/
+    -- Central de Riesgos
     SELECT idMenu = B.idSolicitud,
            cMenu = CONCAT('(C) ', A.cDocumento, ' - ', B.cNombreDoc),
            idPadre = C.nOrden * 100 + A.nGrupo * 10,
@@ -927,34 +927,34 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
           AND B.cNombreDoc <> ''
           AND C.cDescTipoDoc = 'CENTRAL DE RIESGOS'
     GROUP BY A.nGrupo,
-             B.idSolicitud,
-             A.cPertenencia,
-             C.idCategoriaArchivo,
-             C.nOrden,
-             C.idDescTipoDoc
-    /*Condonaciones*/
+        B.idSolicitud,
+        A.cPertenencia,
+        C.idCategoriaArchivo,
+        C.nOrden,
+        C.idDescTipoDoc
     UNION ALL
+    -- Condonaciones
     SELECT idMenu,
-           cMenu,
-           idPadre,
-           idDescTipoDoc,
-           nOrden,
-           idCategoriaArchivo,
-           idArchivo,
-           cExtension,
-           idSecundario
+     cMenu,
+        idPadre,
+        idDescTipoDoc,
+        nOrden,
+        idCategoriaArchivo,
+        idArchivo,
+        cExtension,
+        idSecundario
     FROM @tmpCondonacion
-    /*Solicitudes de Origen Tasa Negociada*/
     UNION ALL
+    -- Solicitudes de Origen Tasa Negociada
     SELECT idMenu = B.idSolicitud,
            cDescMenu = CONCAT(
-                                 IIF(A.cTipoArchivo LIKE '%Solicitud y Aprobación de Tasa Negociable%', '(R) ', '(C) '),
-                                 A.cTipoArchivo,
-                                 ' ',
-                                 IIF(B.dFechaMod IS NULL,
-                                     '(*)',
-                                     (FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')))
-                             ),
+               IIF(A.cTipoArchivo LIKE '%Solicitud y Aprobación de Tasa Negociable%', '(R) ', '(C) '),
+                    A.cTipoArchivo,
+                    ' ',
+               IIF(B.dFechaMod IS NULL,
+               '(*)',
+                (FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')))
+               ),
            idPadre = C.idDescTipoDoc,
            A.idDescTipoDoc,
            nOrden = C.nOrden + A.idTipoArchivo * 30,
@@ -973,7 +973,8 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                AND D.idCategoriaArchivo = B.idCategoriaArchivo
     WHERE B.idSolicitud = @idSolicitudOrigen;
 
-    /*Para Pos Integrl - Central Riesgos*/
+    -- SECCIÓN 10: Validaciones y completar menú
+    -- Para Pos Integral - Central Riesgos
     IF EXISTS
     (
         SELECT 1
@@ -1035,14 +1036,14 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                 idSecundario
             )
             SELECT idDescTipoDoc,
-                   cDescTipoDoc,
-                   idPadre,
-                   idDescTipoDoc,
-                   nOrden,
-                   0,
-                   0,
-                   '',
-                   0
+                cDescTipoDoc,
+                idPadre,
+                idDescTipoDoc,
+                nOrden,
+                0,
+                0,
+                '',
+                0
             FROM dbo.SI_FINDescTipoDoc
             WHERE idDescTipoDoc = 96
                   AND @cTipoSolicitud = 'individual';
@@ -1053,6 +1054,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
     SELECT @idDescInfoGral = idDescTipoDoc
     FROM dbo.SI_FINDescTipoDoc
     WHERE cDescTipoDoc = 'INFORMACIÓN GENERAL DE INTERVINIENTES';
+    
     IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = @idDescInfoGral)
     BEGIN
         INSERT INTO @tmpMenu
@@ -1081,7 +1083,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
               AND @cTipoSolicitud = 'individual';
     END;
 
-    /*Desembolsos Virtuales*/
+    -- Desembolsos Virtuales
     IF EXISTS
     (
         SELECT 1
@@ -1103,7 +1105,10 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             idSecundario
         )
         SELECT idMenu = B.idSolicitud,
-               cDescMenu = CONCAT(IIF(A.lChecklist = 1, '(C) ', '(R) '), A.cTipoArchivo),
+               cDescMenu = CONCAT(
+                   IIF(A.lChecklist = 1, '(C) ', '(R) '), 
+                   A.cTipoArchivo
+               ),
                idPadre = C.idDescTipoDoc,
                A.idDescTipoDoc,
                nOrden = C.nOrden + A.idTipoArchivo * 30,
@@ -1121,10 +1126,9 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                 ON D.cNombreCategoria = 'Desembolsos Virtuales'
                    AND D.idCategoriaArchivo = B.idCategoriaArchivo
             LEFT JOIN dbo.SI_FINTipoArchivo TP
-                ON B.idTipoArchivo = TP.idTipoArchivo
+            ON B.idTipoArchivo = TP.idTipoArchivo
         WHERE B.idSolicitud = @idSolicitud;
     END;
-    /*Fin Desembolsos Virtuales*/
 
     -- Para SOBREENDEUDAMIENTO
     SELECT @idSentinel = idDescTipoDoc
@@ -1141,7 +1145,6 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM @tmpMenu WHERE idPadre = @idSentinel)
         BEGIN
-
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1166,13 +1169,13 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             FROM dbo.SI_FINDescTipoDoc
             WHERE idPadre = @idSentinel
                   AND @cTipoSolicitud = 'individual';
-
         END;
     END;
-    /****************************************/
 
+    -- SECCIÓN 11: Nodos Padre
     SET @cMenuTasa = '';
     SET @idOpeTasa = 0;
+    
     IF EXISTS
     (
         SELECT 1
@@ -1198,27 +1201,26 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
         idSecundario
     )
     SELECT idMenu = A.idPadre,
-           cMenu = CASE
-                       WHEN @idOpeTasa = 1 THEN
-                           REPLACE(B.cDescTipoDoc, 'Reprogramación', @cMenuTasa)
-                       ELSE
-                           B.cDescTipoDoc
-                   END,
-           idPadre = B.idPadre,
-           A.idPadre,
-           IIF(B.cDescTipoDoc = 'DNI de Intervinientes', 1, B.nOrden),
-           0,
-           idArchivo = 0,
-           cExtension = '',
-           idSecundario = 0
+        cMenu = CASE
+                    WHEN @idOpeTasa = 1 THEN
+                        REPLACE(B.cDescTipoDoc, 'Reprogramación', @cMenuTasa)
+                    ELSE B.cDescTipoDoc
+          END,
+        idPadre = B.idPadre,
+        A.idPadre,
+          IIF(B.cDescTipoDoc = 'DNI de Intervinientes', 1, B.nOrden),
+        0,
+        idArchivo = 0,
+        cExtension = '',
+        idSecundario = 0
     FROM @tmpMenu A
         INNER JOIN dbo.SI_FINDescTipoDoc B
             ON B.idDescTipoDoc = A.idPadre
     GROUP BY A.idPadre,
-             B.cDescTipoDoc,
-             B.nOrden,
-             B.idPadre;
-             
+        B.cDescTipoDoc,
+        B.nOrden,
+        B.idPadre;
+
     -- SECCIÓN 12:Expedientes Grupo Solidario
     IF (@cTipoSolicitud = 'grupal')
     BEGIN
@@ -1237,7 +1239,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             DELETE FROM @tmpMenu
             WHERE idMenu IN ( 31 ) OR idPadre = 31;
 
-
+            -- Obtener IDs de descriptores
             SET @idDescTipoDocInte =
             (
                 SELECT idDescTipoDoc
@@ -1269,17 +1271,19 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                       )
             );
 
+            -- Actualizar nombre de grupo
             UPDATE @tmpMenu
-            SET cMenu = CONCAT(   'GS: ',
-                        (
-                            SELECT cNombre
-                            FROM dbo.SI_FinGrupoSolidario
-                            WHERE idGrupoSolidario = @idGrupoSolidario
-                        )
-                              )
+            SET cMenu = CONCAT(
+            'GS: ',
+                (
+                    SELECT cNombre
+                    FROM dbo.SI_FinGrupoSolidario
+                    WHERE idGrupoSolidario = @idGrupoSolidario
+                )
+            )
             WHERE idMenu = 33;
 
-            --integrantes
+            --Integrantes
 
             INSERT INTO @tmpMenu
             (
@@ -1308,8 +1312,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             WHERE A.idSolicitudCredGrupoSol = @idSolicitud
                   AND A.idEstado != 3;
 
-
-            --nuevos expedientes
+            --Nuevos expedientes
 
             INSERT INTO @tmpMenu
             (
@@ -1325,13 +1328,15 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT B.idDescTipoDoc,
                    CONCAT('(C) ', B.cTipoArchivo),
-                   IIF(A.idDescTipoDoc = @idDescTipoDocGrup,
-                       33,
-                       IIF(B.cTipoArchivo = 'DNI o Carnet de Extranjería',
-                           D.idSolicitud * -3,
-                           IIF(B.cTipoArchivo = 'SBS', A.idSolicitud * -4, D.idSolicitud))),
+                   IIF(
+                        A.idDescTipoDoc = @idDescTipoDocGrup, 33,
+                       IIF(B.cTipoArchivo = 'DNI o Carnet de Extranjería', D.idSolicitud * -3,
+                       IIF(B.cTipoArchivo = 'SBS', A.idSolicitud * -4, 
+                       D.idSolicitud))),
                    B.idDescTipoDoc,
-                   IIF(A.idCli IS NULL, 320 + B.idTipoArchivo, D.idSolicitud * 20 + B.idTipoArchivo * 0.001),
+                   IIF(
+                       A.idCli IS NULL,  320 + B.idTipoArchivo, 
+                       D.idSolicitud * 20 + B.idTipoArchivo * 0.001),
                    A.idCategoriaArchivo,
                    A.idArchivos,
                    C.cExtencion,
@@ -1345,20 +1350,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                     ON A.idSolicitud = D.idSolicitud
             WHERE A.lVigente = 1
                   AND B.lVigente = 1
-                  AND
-                  (
-                      A.idDescTipoDoc = @idDescTipoDocInte
-                      OR A.idDescTipoDoc = @idDescTipoDocGrup
-                  )
+                  AND (A.idDescTipoDoc = @idDescTipoDocInte OR A.idDescTipoDoc = @idDescTipoDocGrup)
                   AND A.idSolicitudCredGrupoSol = @idSolicitud
-                  AND
-                  (
-                      D.idEstado IS NULL
-                      OR D.idEstado != 3
-                  );
+                  AND (D.idEstado IS NULL OR D.idEstado != 3);
 
-
-            --documentos requeridos (grupo e integrante)
+            --Documentos requeridos (grupo e integrante)
 
             INSERT INTO @tmpMenu
             (
@@ -1423,8 +1419,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                 WHERE C.idSolicitud = A.idSolicitud
             );
 
-            ---- Visitas vinculadas
-
+            -- Visitas vinculadas
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1464,14 +1459,14 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT E.idVisita,
                    CONCAT(
-                             ISNULL(G.cPerfil, 'SIN PERFIL'),
-                             ' - ',
-                             F.cWinUser,
-                             ' (',
-                             J.cNombre,
-                             ') ',
-                             CAST(FORMAT(E.dtFechaVisita, 'dd/MM/yyy') AS VARCHAR(10))
-                         ),
+                       ISNULL(G.cPerfil, 'SIN PERFIL'),
+                       ' - ',
+                       F.cWinUser,
+                       ' (',
+                       J.cNombre,
+                       ') ',
+                       CAST(FORMAT(E.dtFechaVisita, 'dd/MM/yyy') AS VARCHAR(10))
+                   ),
                    A.idSolicitud * -1,
                    H.idDescTipoDoc,
                    A.idSolicitud * @idArchivoFinal + 3,
@@ -1496,14 +1491,9 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                   AND H.cDescTipoDoc = 'VISITA'
                   AND H.lVigente = 1
                   AND I.cNombre != 'Visita Post desembolso'
-                  AND
-                  (
-                      A.idEstado IS NULL
-                      OR A.idEstado != 3
-                  );
+                  AND (A.idEstado IS NULL OR A.idEstado != 3);
 
-            --visitas post desembolso
-
+            --Visitas post desembolso
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1543,14 +1533,14 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT E.idVisita,
                    CONCAT(
-                             ISNULL(G.cPerfil, 'SIN PERFIL'),
-                             ' - ',
-                             F.cWinUser,
-                             ' (',
-                             J.cNombre,
-                             ') ',
-                             CAST(FORMAT(E.dtFechaVisita, 'dd/MM/yyy') AS VARCHAR(10))
-                         ),
+                       ISNULL(G.cPerfil, 'SIN PERFIL'),
+                       ' - ',
+                       F.cWinUser,
+                       ' (',
+                       J.cNombre,
+                       ') ',
+                       CAST(FORMAT(E.dtFechaVisita, 'dd/MM/yyy') AS VARCHAR(10))
+                   ),
                    A.idSolicitud * -2,
                    H.idDescTipoDoc,
                    A.idSolicitud * @idArchivoFinal + 5,
@@ -1575,14 +1565,9 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                   AND H.cDescTipoDoc = 'VISITA'
                   AND H.lVigente = 1
                   AND I.cNombre = 'Visita Post desembolso'
-                  AND
-                  (
-                      A.idEstado IS NULL
-                      OR A.idEstado != 3
-                  );
+                  AND (A.idEstado IS NULL OR A.idEstado != 3);
 
             --AGRUPADOR DNI
-
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1635,9 +1620,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             WHERE A.idSolicitudCredGrupoSol = @idSolicitud
                   AND A.idEstado != 3;
 
-
-            --AGRUPADOR CENTRAL DE RIESGOS
-
+            -- AGRUPADOR CENTRAL DE RIESGOS
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1679,11 +1662,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT -1,
                    CONCAT(
-                             '(R) ',
-                             B.cNombreArchivo COLLATE Modern_Spanish_CI_AS,
-                             ' ',
-                             FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                         ),
+                       '(R) ',
+                       B.cNombreArchivo COLLATE Modern_Spanish_CI_AS,
+                       ' ',
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ),
                    A.idSolicitud * -4,
                    B.idDescTipoDoc,
                    A.idSolicitud * 20 + @idTipoArchivoSBS * 0.001 + 0.0001,
@@ -1703,8 +1686,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                   AND A.idEstado != 3
             ORDER BY A.idCli;
 
-            --sentinel 
-
+            -- Sentinel
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1719,11 +1701,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT -1,
                    CONCAT(
-                             '(C) ',
-                             C.cTipoArchivo COLLATE Modern_Spanish_CI_AS,
-                             ' ',
-                             FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                         ),
+                       '(C) ',
+                       C.cTipoArchivo COLLATE Modern_Spanish_CI_AS,
+                       ' ',
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ),
                    A.idSolicitud * -4,
                    C.idDescTipoDoc,
                    A.idSolicitud * 20 + @idTipoArchivoSBS * 0.001 + 0.0002,
@@ -1746,8 +1728,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                   AND A.idEstado != 3
             ORDER BY A.idCli;
 
-            -- sentinel sabio financiero
-
+            -- Sentinel sabio financiero
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1762,11 +1743,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT -1,
                    CONCAT(
-                             '(C) ',
-                             C.cTipoArchivo,
-                             ' ',
-                             FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                         ),
+                       '(C) ',
+                       C.cTipoArchivo,
+                       ' ',
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ),
                    A.idSolicitud,
                    C.idDescTipoDoc,
                    A.idSolicitud * 20 + @idArchivoFinal * 0.001 + 0.0001,
@@ -1789,8 +1770,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                   AND A.idEstado != 3
             ORDER BY A.idCli;
 
-            --actualizar posicion
-
+            -- Actualizar posicion
             UPDATE A
             SET A.nOrden = 321 + 0.1
             FROM @tmpMenu A
@@ -1798,7 +1778,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
         END;
         ELSE
         BEGIN
-            /*Menu padre*/
+            -- Menu padre
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1821,14 +1801,13 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                    '',
                    0
             FROM dbo.SI_FinSolicitud A
-                INNER JOIN dbo.SI_FinCliente B
-                    ON B.idCli = A.idCli
+                INNER JOIN dbo.SI_FinCliente B ON B.idCli = A.idCli
             WHERE A.idSolicitudCredGrupoSol = @idSolicitud
             GROUP BY B.idCli,
-                     B.cNombre,
-                     A.idSolicitud
+                B.cNombre,
+                A.idSolicitud
             ORDER BY A.idSolicitud;
-            /*DNI*/
+            -- DNI
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1853,7 +1832,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             FROM dbo.SI_FinSolicitud A
             WHERE A.idSolicitudCredGrupoSol = @idSolicitud
             ORDER BY A.idCli;
-            /*Posicion Integral*/
+            -- Posicion Integral
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1868,11 +1847,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT -1,
                    cDescMenu = CONCAT(
-                                         '(R) ',
-                                         B.cNombreArchivo,
-                                         ' ',
-                                         FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                                     ),
+                       '(R) ',
+                       B.cNombreArchivo,
+                       ' ',
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ),
                    B.idCli,
                    B.idDescTipoDoc,
                    A.idSolicitud * 10 + 2,
@@ -1889,7 +1868,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
                        AND B.idCategoriaArchivo = 2
             WHERE A.idSolicitudCredGrupoSol = @idSolicitud
             ORDER BY A.idCli;
-            /*Sentinel*/
+            -- Sentinel
             INSERT INTO @tmpMenu
             (
                 idMenu,
@@ -1904,11 +1883,11 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
             )
             SELECT -1,
                    cDescMenu = CONCAT(
-                                         '(C) ',
-                                         C.cTipoArchivo,
-                                         ' ',
-                                         FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
-                                     ),
+                       '(C) ',
+                       C.cTipoArchivo,
+                       ' ',
+                       FORMAT(IIF(B.dFechaMod IS NULL, B.dFechaReg, B.dFechaMod), 'dd/MM/yyyy')
+                   ),
                    B.idCli,
                    C.idDescTipoDoc,
                    A.idSolicitud * 10 + 3,
@@ -1934,6 +1913,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
     SELECT @_idDescTipoDoc = idDescTipoDoc
     FROM SI_FINDescTipoDoc
     WHERE cDescTipoDoc = 'TASAS NEGOCIABLES - POST DESEMBOLSO';
+    
     SELECT @_idOperacion = idOperacion
     FROM SI_FinOperacion
     WHERE cOperacion = 'RETENCION CON CAMBIO DE TASA';
@@ -1951,7 +1931,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
         WHERE idDescTipoDoc = @_idDescTipoDoc;
     END;
 
-    -- 
+    -- Actualizar orden para individual
     IF (@cTipoSolicitud = 'individual')
     BEGIN
         UPDATE @tmpMenu
@@ -1979,6 +1959,7 @@ CAST(FORMAT(IIF(D.dFechaMod IS NULL, D.dFechaReg, D.dFechaMod), 'dd/MM/yyy') AS 
         WHERE cMenu LIKE '%Expediente Evaluación Credirapp Pro%';
     END;
 
+    -- SECCIÓN 14: Resultado Final
     IF (@cTipoSolicitud = 'individual' OR @idGrupoSolidario IS NULL)
     BEGIN
         SELECT idMenu,
@@ -2024,6 +2005,3 @@ END;
 GO
 GRANT EXECUTE ON [dbo].[GEN_ObtenerMenuExpediente_SP] TO [Rol_Fin]
 GO
-
-
-"https://gateway-test.losandes.pe/payment-management-x/v1/external-transfers/retrieve?typeOfIdentification=1&identityCardNumber=75548237&identificationOrContactInformation=1&identificationOrContactValue=09400141000082342558&financialInstitutionIdentification=0094&currencyInternalIdentifier=1&personTypeIdentifier=1"

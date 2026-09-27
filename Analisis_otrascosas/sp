@@ -1,0 +1,26 @@
+exec CLI_DatoClientexIdCli_Sp @idCli=202612
+go
+exec ADM_PerfilesAlertaCumpleExpCliente_SP @idPerfil=220
+go
+exec ADM_AlertaCumpleExpCliente_SP @cDocumento='24294006'
+go
+exec Cre_RetornaCuentaSolCliente_sp @IdCliente=202612,@cTipBusqueda='T',@IdEstado='[]'
+go
+exec Cre_RetornaCuentaSolCliente_sp @IdCliente=202612,@cTipBusqueda='T',@IdEstado='[]'
+go
+exec GEN_ObtenerMenuExpediente_SP @idSolicitud=1194883,@cTipoSolicitud='individual',@idTipoFirma=-1
+go
+exec CRE_DatoSolicitudxIDSolicitud_sp @idSolicitud=1194883
+go
+exec GEN_ListarDetalleTipoGasto_SP @idConcepto=0
+go
+exec CRE_ObtenerSolicitudSeguroTipo_SP @idSolicitud=1194883
+go
+exec ADM_ListarAuthObjetoForm_SP @idMenu='8103',@idAgencia=4,@idEstablecimiento=4,@idPerfil=220,@idUsuario=737,@idSolicitud=1194883
+go
+exec CRE_ListarZonaEAI_SP @idUsuario=737,@idPerfil=220
+go
+exec CRE_ListarAgenciaEAI_SP @idUsuario=737,@idPerfil=220,@idZona=1
+go
+exec CRE_BuscaClientesConCampania_SP @cNroDocumento='24294006',@idRegion=1,@idOficina=75,@idEstablecimiento=4,@idUsuario=737
+go
