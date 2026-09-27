@@ -49,6 +49,7 @@ model User {
 
   // Relación con sus roles y oficinas (La tabla intermedia)
   perfiles          UsuarioUniversidad[] 
+  asignacionesSistema UsuarioSistema[]
 
   @@map("user")
 }
@@ -65,14 +66,21 @@ model Rol {
   lVigente        Boolean  @default(true)
   dCreatedAt       DateTime @default(now())
   dUpdatedAt       DateTime? @updatedAt
+  cTipoRol        TipoRol @default(UNIVERSIDAD)
   
   detallePermisos DetallePermiso[]
   
   // Relaciones inversas
   asignaciones    UsuarioUniversidad[] 
+  asignacionesSistema UsuarioSistema[]
   invitaciones    Invitation[] // Invitaciones que otorgan este rol
 
   @@map("rol")
+}
+
+enum TipoRol {
+  UNIVERSIDAD
+  SISTEMA
 }
 
 // ==========================================
@@ -108,6 +116,22 @@ model UsuarioUniversidad {
   @@map("user_rol_oficina_universidad")
 }
 
+model UsuarioSistema {
+  idUsuarioSistema Int      @id @default(autoincrement())
+  idUser           Int
+  idRol            Int
+  lActivo          Boolean  @default(true)
+  lVigente         Boolean  @default(true)
+  dCreatedAt       DateTime @default(now())
+  dUpdatedAt       DateTime? @updatedAt
+
+  user             User     @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+  rol              Rol      @relation(fields: [idRol], references: [idRol], onDelete: Cascade)
+
+  @@unique([idUser, idRol], name: "unique_usuario_sistema_user_rol", map: "usuario_sistema_user_rol_unique_constraint")
+  @@map("usuario_sistema")
+}
+
 // ==========================================
 // 5. PERMISOS Y OFICINAS (Quedan igual, están perfectas)
 // ==========================================
@@ -121,6 +145,7 @@ model Permiso {
 
   dCreatedAt       DateTime @default(now())
   dUpdatedAt       DateTime? @updatedAt
+  cTipoRol        TipoRol @default(UNIVERSIDAD)
 
   detallePermisos DetallePermiso[]
   

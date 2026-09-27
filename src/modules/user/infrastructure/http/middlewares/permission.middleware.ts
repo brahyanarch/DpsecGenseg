@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { appError } from "../../../domain/exceptions/app.Error";
 
-export const checkPermission = (permissionName: string) => {
+export const checkPermission = (permissionName: string) => { //  
     return (req: Request, res: Response, next: NextFunction) => {
         try {
             const securityContext = (req as any).securityContext;

@@ -18,7 +18,7 @@ router.get("/users", authenticate, resolveScope, authController.getUsers);
 router.post("/assign-role", authController.assignRole);
 router.patch("/users/:idUser/status", authenticate, resolveScope, checkPermission('DESACTIVAR_USUARIO'), authController.updateUserStatus);
 router.delete("/users/:idUser", authenticate, resolveScope, checkPermission('ELIMINAR_USUARIO'), authController.softDeleteUser);
-router.patch("/profiles/:idUsuarioUni/status", authenticate, resolveScope, checkPermission('DESACTIVAR_USUARIO'), authController.updateProfileStatus);
+router.patch("/profiles/:idUsuarioUni/status", authenticate, resolveScope, checkPermission('DESACTIVAR_USUARIOS'), authController.updateProfileStatus);
 router.delete("/profiles/:idUsuarioUni", authenticate, resolveScope, checkPermission('ELIMINAR_USUARIO'), authController.softDeleteProfile);
 
 export default router;

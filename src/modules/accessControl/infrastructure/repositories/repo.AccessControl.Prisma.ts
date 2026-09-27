@@ -14,13 +14,14 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
                     cNombreRol: rol.cNombreRol,
                     cAbrevRol: rol.cAbrevRol,
                     lActivo: rol.lActivo,
-                    lVigente: rol.lVigente
+                    lVigente: rol.lVigente,
+                    cTipoRol: rol.cTipoRol
                 }
             });
 
-            // 2. Buscar todos los permisos vigentes
+            // 2. Buscar permisos activos y vigentes del mismo tipo
             const permissions = await tx.permiso.findMany({
-                where: { lVigente: true }
+                where: { cTipoRol: rol.cTipoRol, lActivo: true, lVigente: true }
             });
 
             // 3. Crear las asociaciones en DetallePermiso
@@ -45,13 +46,14 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
                     cNombrePermiso: permiso.cNombrePermiso,
                     cAbrevPermiso: permiso.cAbrevPermiso,
                     lActivo: permiso.lActivo,
-                    lVigente: permiso.lVigente
+                    lVigente: permiso.lVigente,
+                    cTipoRol: permiso.cTipoRol
                 }
             });
 
-            // 2. Buscar todos los roles vigentes
+            // 2. Buscar roles activos y vigentes del mismo tipo
             const roles = await tx.rol.findMany({
-                where: { lVigente: true }
+                where: { cTipoRol: permiso.cTipoRol, lActivo: true, lVigente: true }
             });
 
             // 3. Crear las asociaciones en DetallePermiso
@@ -72,14 +74,14 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
         const results = await prisma.permiso.findMany({
             where: { lVigente: true }
         });
-        return results.map(p => new entPermiso(p.idPermiso, p.cNombrePermiso, p.cAbrevPermiso, p.lActivo, p.lVigente));
+        return results.map(p => new entPermiso(p.idPermiso, p.cNombrePermiso, p.cAbrevPermiso, p.lActivo, p.lVigente, p.cTipoRol));
     }
 
     async findValidRoles(): Promise<entRol[]> {
         const results = await prisma.rol.findMany({
-            where: { lVigente: true }
+            where: { lVigente: true },
         });
-        return results.map(r => new entRol(r.idRol, r.cNombreRol, r.cAbrevRol, r.lActivo, r.lVigente));
+        return results.map(r => new entRol(r.idRol, r.cNombreRol, r.cTipoRol, r.cAbrevRol, r.lActivo, r.lVigente));
     }
 
     async findRolesWithScope(context: SecurityContext, skip: number, take: number): Promise<{ roles: entRol[], total: number }> {
@@ -112,7 +114,7 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
         ]);
 
         return {
-            roles: rolesDb.map(r => new entRol(r.idRol, r.cNombreRol, r.cAbrevRol, r.lActivo, r.lVigente)),
+            roles: rolesDb.map(r => new entRol(r.idRol, r.cNombreRol, r.cTipoRol, r.cAbrevRol, r.lActivo, r.lVigente)),
             total
         };
     }

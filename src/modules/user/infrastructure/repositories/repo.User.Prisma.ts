@@ -14,7 +14,8 @@ export class repoUserPrisma implements portUserRepository {
         const userDb = await prisma.user.findUnique({
             where: { cEmail: cEmail, lVigente: true },
             include: {
-                perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
+                perfiles: { where: { lVigente: true, lActivo: true, OR: [{ dExpiresAt: null }, { dExpiresAt: { gt: new Date() } }], rol: { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" } }, include: { rol: { include: { detallePermisos: { where: { lActivo: true, lVigente: true, permiso: { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" } }, include: { permiso: true } } } }, oficina: true } },
+                asignacionesSistema: { where: { lVigente: true, lActivo: true, rol: { lActivo: true, lVigente: true, cTipoRol: "SISTEMA" } }, include: { rol: { include: { detallePermisos: { where: { lActivo: true, lVigente: true, permiso: { lActivo: true, lVigente: true, cTipoRol: "SISTEMA" } }, include: { permiso: true } } } } } }
             }
         });
         return userDb ? UserMapper.toDomain(userDb) : null;
@@ -28,16 +29,14 @@ export class repoUserPrisma implements portUserRepository {
                     include: { 
                         rol: { 
                             include: { 
-                                detallePermisos: { 
-                                    include: { permiso: true },
-                                    where: { lVigente: true, lActivo: true }
-                                } 
+                                detallePermisos: { include: { permiso: true }, where: { lVigente: true, lActivo: true, permiso: { lVigente: true, lActivo: true, cTipoRol: "UNIVERSIDAD" } } }
                             } 
                         }, 
                         oficina: true 
                     }, 
-                    where: { lVigente: true, lActivo: true } 
-                }
+                    where: { lVigente: true, lActivo: true, OR: [{ dExpiresAt: null }, { dExpiresAt: { gt: new Date() } }], rol: { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" } }
+                },
+                asignacionesSistema: { where: { lVigente: true, lActivo: true, rol: { lActivo: true, lVigente: true, cTipoRol: "SISTEMA" } }, include: { rol: { include: { detallePermisos: { where: { lActivo: true, lVigente: true, permiso: { lActivo: true, lVigente: true, cTipoRol: "SISTEMA" } }, include: { permiso: true } } } } } }
             }
         });
         return userDb ? UserMapper.toDomain(userDb) : null;
@@ -154,7 +153,7 @@ export class repoUserPrisma implements portUserRepository {
             where: { idRol: idRol, lActivo:true, lVigente:true }
         });
 
-        return !!rol;
+        return rol?.cTipoRol === "UNIVERSIDAD";
     }
 
     public async hasRoleInOffice(idUser: number, idRol: number, idOficina: number): Promise<boolean> {
@@ -175,17 +174,30 @@ export class repoUserPrisma implements portUserRepository {
     async findUsersByScope(context: SecurityContext, filter: UserFilter): Promise<{ users: entUser[], total: number }> {
         const { search, lActivo, sortBy, sortOrder, page = 1, limit = 10 } = filter;
         const skip = (page - 1) * limit;
+        const isGlobalSystem = context?.cTipoRol === "SISTEMA"
+            && Array.isArray(context.permissions)
+            && context.permissions.includes("ACCESO_TOTAL_SISTEMA");
+        const isLocalUniversity = context?.cTipoRol === "UNIVERSIDAD"
+            && Number.isInteger(context.idOficina)
+            && context.idOficina! > 0;
+
+        if (!isGlobalSystem && !isLocalUniversity) {
+            throw new appError("40302", "Contexto no autorizado para listar usuarios", "Security context is not authorized to list users", true);
+        }
 
         // Filtro base: solo usuarios vigentes
         const where: any = { lVigente: true };
 
         // Scope filter
-        if (context.scope === 'LOCAL' && context.idOficina) {
+        if (isLocalUniversity) {
+            const now = new Date();
             where.perfiles = {
                 some: {
                     idOficina: context.idOficina,
                     lVigente: true,
-                    lActivo: true
+                    OR: [{ dExpiresAt: null }, { dExpiresAt: { gt: now } }],
+                    rol: { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" },
+                    oficina: { lActivo: true, lVigente: true }
                 }
             };
         }
@@ -219,7 +231,7 @@ export class repoUserPrisma implements portUserRepository {
                 take: limit,
                 orderBy,
                 include: {
-                    perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, lActivo: true } }
+                    perfiles: { include: { rol: true, oficina: true }, where: { lVigente: true, OR: [{ dExpiresAt: null }, { dExpiresAt: { gt: new Date() } }], rol: { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" }, oficina: { lActivo: true, lVigente: true } } }
                 }
             })
         ]);

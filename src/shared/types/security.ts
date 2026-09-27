@@ -3,6 +3,7 @@ export interface SecurityScope {
     idOficina: number | null;
     idRol: number;
     cNombreRol: string;
+    cTipoRol?: 'UNIVERSIDAD' | 'SISTEMA';
     permissions: string[];
 }
 
@@ -11,5 +12,6 @@ export interface SecurityContext {
     idOficina: number | null;
     idRol: number;
     cNombreRol: string;
+    cTipoRol?: 'UNIVERSIDAD' | 'SISTEMA';
     permissions: string[];
 }

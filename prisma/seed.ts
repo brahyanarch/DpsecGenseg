@@ -8,32 +8,49 @@ async function main() {
 
   // 1. Crear el Rol de Administrador
   const adminRol = await prisma.rol.upsert({
-    where: { cNombreRol: 'ADMINISTRATOR' },
-    update: {},
+    where: { cNombreRol: 'ADMINISTRADOR' },
+    update: { cTipoRol: 'SISTEMA' },
     create: {
-      cNombreRol: 'ADMINISTRATOR',
+      cNombreRol: 'ADMINISTRADOR',
       cAbrevRol: 'ADMIN',
       lActivo: true,
       lVigente: true,
+      cTipoRol: 'SISTEMA',
     },
   });
   console.log(' Rol Administrador creado o verificado.');
 
-  // 2. Crear una Oficina inicial
-  const oficina = await prisma.oficina.upsert({
-    where: { cNombreOficina: 'CENTRAL' },
-    update: {},
+  // 2. Crear el permiso de acceso total y vincularlo al rol de Administrador
+  const accesoTotalPermiso = await prisma.permiso.upsert({
+    where: { cNombrePermiso: 'ACCESO_TOTAL_SISTEMA' },
+    update: { cTipoRol: 'SISTEMA', lActivo: true, lVigente: true },
     create: {
-      cNombreOficina: 'CENTRAL',
-      cAbrevOficina: 'CENTRAL',
+      cNombrePermiso: 'ACCESO_TOTAL_SISTEMA',
+      cTipoRol: 'SISTEMA',
       lActivo: true,
       lVigente: true,
     },
   });
-  console.log(' Oficina Sede Central creada o verificada.');
+
+  await prisma.detallePermiso.upsert({
+    where: {
+      unique_detalle_permiso: {
+        idRol: adminRol.idRol,
+        idPermiso: accesoTotalPermiso.idPermiso,
+      },
+    },
+    update: { lActivo: true, lVigente: true },
+    create: {
+      idRol: adminRol.idRol,
+      idPermiso: accesoTotalPermiso.idPermiso,
+      lActivo: true,
+      lVigente: true,
+    },
+  });
+  console.log(' Permiso de acceso total vinculado al rol Administrador.');
 
   // 3. Crear el Usuario Administrador Inicial
-  const emailAdmin = 'admin'; // Puedes cambiarlo aquí
+  const emailAdmin = 'admin@admin.com'; // Puedes cambiarlo aquí
   const passwordAdmin = 'Admin123*';      // ¡Cámbiala después de loguearte!
   
   const hashedPassword = await hashPassword(passwordAdmin);
@@ -58,12 +75,11 @@ async function main() {
 
   // 4. Vincular Usuario + Rol + Oficina (Perfil)
   // Usamos upsert con la restricción única definida en el schema
-  await prisma.usuarioUniversidad.upsert({
+  await prisma.usuarioSistema.upsert({
     where: {
-      unique_usuario_rol_oficina: {
+      unique_usuario_sistema_user_rol: {
         idUser: adminUser.idUser,
         idRol: adminRol.idRol,
-        idOficina: oficina.idOficina,
       },
     },
     update: {
@@ -73,7 +89,6 @@ async function main() {
     create: {
       idUser: adminUser.idUser,
       idRol: adminRol.idRol,
-      idOficina: oficina.idOficina,
       lActivo: true,
       lVigente: true,
     },

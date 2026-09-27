@@ -8,10 +8,9 @@ export class useLogin {
     // Inyectamos el repositorio (el puerto)
     constructor(private readonly _userRepository: portUserRepository) {}
 
-    public async execute(email: string, passwordInput: string, idActiveProfile: number | null) {
+    public async execute(email: string, passwordInput: string, idActiveProfile?: number | null, idActiveSystemAssignment?: number | null) {
         // 1. Obtener usuario del puerto
         const user = await this._userRepository.findByEmail(email);
-        console.log("Usuario encontrado:", user, "ID de perfil activo solicitado:", idActiveProfile);
         // 2. Validación de seguridad: No revelar si el email no existe
         if (!user) throw new appError("54003", "INVALID_CREDENTIALS", "Invalid credentials", false);
         if ( user.isVigente() === false || user.isActivo() === false) {
@@ -26,19 +25,18 @@ export class useLogin {
             throw new appError("54003", "INVALID_CREDENTIALS", "Invalid credentials", false);
         }
 
-        // validacion de idActiveProfile
-        if (idActiveProfile != null) {
-            const hasActiveProfile = user.verifyProfile(idActiveProfile);
-            if (!hasActiveProfile) {
-                throw new appError("54005", "ACTIVE_PROFILE_NOT_FOUND", "Active profile not found", false);
-            }
+        if (idActiveProfile != null && idActiveSystemAssignment != null) {
+            throw new appError("40001", "Seleccione un solo contexto", "Select exactly one active context", false);
         }
+        if (idActiveProfile != null && !user.verifyProfile(idActiveProfile)) throw new appError("54005", "ACTIVE_PROFILE_NOT_FOUND", "Active profile not found", false);
+        if (idActiveSystemAssignment != null && !user.verifySystemAssignment(idActiveSystemAssignment)) throw new appError("54005", "ACTIVE_SYSTEM_ASSIGNMENT_NOT_FOUND", "Active system assignment not found", false);
 
         // 4. Generación de Token
         const token = generateToken({ 
             nId: user.getId(), 
             cEmail: user.getEmail(), 
-            idActiveProfile: idActiveProfile
+            idActiveProfile: idActiveProfile ?? null,
+            idActiveSystemAssignment: idActiveSystemAssignment ?? null
         });
         
         return { 
@@ -47,6 +45,7 @@ export class useLogin {
                 email: user.getEmail(), 
                 nombre: user.getNombre(),
                 perfiles: user.getPerfiles(),
+                asignacionesSistema: user.getAsignacionesSistema(),
                 //perfil: user.hasActiveRole(1, "Admin") ? "Admin" : "User" // Ej
             } 
         };

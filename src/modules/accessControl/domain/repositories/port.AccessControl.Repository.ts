@@ -1,5 +1,6 @@
 import { entRol } from "../entities/ent.Rol";
 import { entPermiso } from "../entities/ent.Permiso";
+import { SecurityContext } from "../../../../shared/types/security";
 
 export interface portAccessControlRepository {
     createRole(rol: entRol): Promise<void>;

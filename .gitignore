@@ -2,4 +2,12 @@ node_modules
 # Keep environment variables out of version control
 .env
 uploads/
-prisma/migrations/
+prisma/migrations/*
+!prisma/migrations/20260926000000_add_usuario_sistema/
+!prisma/migrations/20260926000000_add_usuario_sistema/migration.sql
+!prisma/migrations/20260926010000_add_role_type_catalog/
+!prisma/migrations/20260926010000_add_role_type_catalog/migration.sql
+!prisma/migrations/20260926020000_add_permission_role_type/
+!prisma/migrations/20260926020000_add_permission_role_type/migration.sql
+!prisma/migrations/20260926030000_add_university_office_permissions/
+!prisma/migrations/20260926030000_add_university_office_permissions/migration.sql

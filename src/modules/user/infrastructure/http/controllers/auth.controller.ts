@@ -47,8 +47,11 @@ export class AuthController {
 
     public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const { cEmail, cPassword, idActiveProfile } = req.body;
-            const result = await this._loginUseCase.execute(cEmail, cPassword, idActiveProfile);
+            const { cEmail, cPassword, idActiveProfile, idActiveSystemAssignment } = req.body;
+            if (Object.prototype.hasOwnProperty.call(req.body, "idActiveProfile") && Object.prototype.hasOwnProperty.call(req.body, "idActiveSystemAssignment")) {
+                throw new appError("40001", "Seleccione un solo contexto", "Select exactly one active context", true);
+            }
+            const result = await this._loginUseCase.execute(cEmail, cPassword, idActiveProfile, idActiveSystemAssignment);
 
             console.log("Resultado del login:", result);
             res.status(200).json({ nSuccess: true, data: result });
@@ -98,11 +101,11 @@ export class AuthController {
             const idUsuarioUni = Number(req.params.idUsuarioUni);
             const { lActivo } = req.body;
             
-            console.log(`[DEBUG] updateProfileStatus - Request: idUsuarioUni=${idUsuarioUni}, lActivo=${lActivo}`);
+            //console.log(`[DEBUG] updateProfileStatus - Request: idUsuarioUni=${idUsuarioUni}, lActivo=${lActivo}`);
 
             await this._updateProfileStatusUseCase.execute(idUsuarioUni, lActivo);
 
-            console.log(`[DEBUG] updateProfileStatus - Success: profile ${idUsuarioUni} set to lActivo=${lActivo}`);
+            // console.log(`[DEBUG] updateProfileStatus - Success: profile ${idUsuarioUni} set to lActivo=${lActivo}`);
             res.status(200).json({ nSuccess: true, cMessage: "Estado del perfil actualizado correctamente" });
         } catch (error) {
             console.error(`[DEBUG] updateProfileStatus - Error:`, error);
@@ -142,7 +145,7 @@ export class AuthController {
                 throw new appError("40101", "Usuario no autenticado", "User not authenticated", true);
             }
 
-            const result = await this._getMeUseCase.execute(idUser);
+            const result = await this._getMeUseCase.execute(idUser, req.user!);
 
             res.status(200).json({ nSuccess: true, data: result });
         } catch (error) {
@@ -155,7 +158,7 @@ export class AuthController {
             const securityContext = (req as any).securityContext;
 
             if (!securityContext) {
-                throw new appError("50001", "Contexto de seguridad no resuelto", "Security context missing", true);
+                throw new appError("40302", "Contexto de seguridad no resuelto", "Security context missing", true);
             }
 
             // Parámetros de filtros y paginación desde el query string
@@ -191,17 +194,16 @@ export class AuthController {
     public switchProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const idUser = Number(req.user?.nId);
-            const { idActiveProfile } = req.body;
+            const { idActiveProfile, idActiveSystemAssignment } = req.body;
 
             if (!idUser) {
                 throw new appError("40101", "Usuario no autenticado", "User not authenticated", true);
             }
-
-            if (!idActiveProfile) {
-                throw new appError("40001", "El idActiveProfile es requerido", "idActiveProfile is required", true);
+            if (Object.prototype.hasOwnProperty.call(req.body, "idActiveProfile") && Object.prototype.hasOwnProperty.call(req.body, "idActiveSystemAssignment")) {
+                throw new appError("40001", "Seleccione un solo contexto", "Select exactly one active context", true);
             }
 
-            const result = await this._switchProfileUseCase.execute(idUser, Number(idActiveProfile));
+            const result = await this._switchProfileUseCase.execute(idUser, idActiveProfile == null ? undefined : Number(idActiveProfile), idActiveSystemAssignment == null ? undefined : Number(idActiveSystemAssignment));
 
             res.status(200).json({ nSuccess: true, data: result });
         } catch (error) {

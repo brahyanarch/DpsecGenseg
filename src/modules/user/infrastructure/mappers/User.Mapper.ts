@@ -6,47 +6,43 @@ export class UserMapper {
         // Aquí conviertes el objeto sucio de Prisma a tu Entidad limpia
         
         // Extraemos los permisos únicos de todos los roles del usuario
-        const permissionsSet = new Set();
-        const permissions: Permission[] = [];
-
-        if (raw.perfiles) {
-            raw.perfiles.forEach((perfil: any) => {
-                if (perfil.rol && perfil.rol.detallePermisos) {
-                    perfil.rol.detallePermisos.forEach((dp: any) => {
-                        if (dp.lVigente && dp.lActivo && dp.permiso) {
-                            permissionsSet.add(dp.permiso.idPermiso);
-                            permissions.push({
-                                idPermiso: dp.permiso.idPermiso,
-                                cNombrePermiso: dp.permiso.cNombrePermiso
-                            });
-                        }
-                    });
-                }
-            });
-        }
+        // Permissions are resolved only after selecting a single active context.
 
         // Eliminamos duplicados basándonos en el idPermiso
-        const uniquePermissions = permissions.filter((p, index, self) =>
-            index === self.findIndex((t) => t.idPermiso === p.idPermiso)
-        );
+        const uniquePermissions: Permission[] = [];
 
         return new entUser(
             raw.idUser,
             raw.cEmail,
             raw.cPassword,
             raw.cNombre,
-            raw.perfiles.map((a: any) => ({
+            (raw.perfiles || []).map((a: any) => ({
                 idRol: a.idRol,
                 cNombreRol: a.rol.cNombreRol,
                 idOficina: a.idOficina,
                 cNombreOficina: a.oficina.cNombreOficina,
                 idProfile: a.idUsuarioUni,
                 dExpiresAt: a.dExpiresAt,
-                lActivo: a.lActivo
+                lActivo: a.lActivo,
+                lVigente: a.lVigente,
+                cTipoRol: a.rol.cTipoRol
             })),
             uniquePermissions,
+            null,
             raw.lVigente,
-            raw.lActivo
+            raw.lActivo,
+            raw.nFailedAttempts,
+            raw.dLastFailedAttempt,
+            (raw.asignacionesSistema || []).map((a: any) => ({
+                idRol: a.idRol,
+                cNombreRol: a.rol.cNombreRol,
+                idAsignacionSistema: a.idUsuarioSistema,
+                lActivo: a.lActivo,
+                lVigente: a.lVigente,
+                cTipoRol: a.rol.cTipoRol
+            })),
+            (raw.perfiles || []).map((a: any) => ({ id: a.idUsuarioUni, permissions: (a.rol.detallePermisos || []).map((d: any) => ({ idPermiso: d.permiso.idPermiso, cNombrePermiso: d.permiso.cNombrePermiso })) })),
+            (raw.asignacionesSistema || []).map((a: any) => ({ id: a.idUsuarioSistema, permissions: (a.rol.detallePermisos || []).map((d: any) => ({ idPermiso: d.permiso.idPermiso, cNombrePermiso: d.permiso.cNombrePermiso })) }))
         );
     }
 
@@ -57,6 +53,7 @@ export class UserMapper {
             cNombre: user.getNombre(),
             lActivo: user.isActivo(),
             perfiles: user.getPerfiles(),
+            asignacionesSistema: user.getAsignacionesSistema(),
             permissions: user.getPermissions()
         };
     }
