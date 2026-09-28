@@ -16,6 +16,7 @@ import { UserFilter } from "../../../../../shared/types/user-filter";
 import { AssignRoleDTO } from "../dto/dto.AssignRole";
 
 import { appError } from "../../../domain/exceptions/app.Error";
+import { useCreateInvitation } from "../../../aplication/useCases/auth/use.CreateInvitation";
 
 export class AuthController {
     // Declaramos los casos de uso como propiedades privadas
@@ -29,6 +30,7 @@ export class AuthController {
     private readonly _getMeUseCase: useGetMe;
     private readonly _switchProfileUseCase: useSwitchProfile;
     private readonly _getUsersUseCase: useGetUsers;
+    private readonly _createInvitationUseCase = new useCreateInvitation();
 
     constructor() {
         // Centralizamos la creación de dependencias aquí
@@ -68,6 +70,20 @@ export class AuthController {
 
             res.status(201).json({ nSuccess: true, data: result });
         } catch (error) {
+            next(error);
+        }
+    };
+
+    public createInvitation = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const result = await this._createInvitationUseCase.execute(req.body, (req as any).securityContext);
+            res.status(201).json({ nSuccess: true, data: result });
+        } catch (error) {
+            if (error instanceof appError && error.cCode.startsWith("INVITATION_")) {
+                const status = error.cCode === "INVITATION_INVALID" ? 400 : error.cCode === "INVITATION_FORBIDDEN" ? 403 : error.cCode === "INVITATION_ROLE_NOT_FOUND" ? 404 : error.cCode === "INVITATION_EMAIL_FAILED" ? 502 : 409;
+                res.status(status).json({ nSuccess: false, error: { cCode: error.cCode, cMessage: error.cUserMessage } });
+                return;
+            }
             next(error);
         }
     };

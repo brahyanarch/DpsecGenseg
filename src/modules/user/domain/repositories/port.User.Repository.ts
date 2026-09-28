@@ -9,7 +9,7 @@ export interface portUserRepository {
     assignRole(data: AssignRoleDTO): Promise<boolean | null>;
     findByEmail(email: string): Promise<entUser | null>;
     findById(id: number): Promise<entUser | null>;
-    save(user: entUser): Promise<void>;
+    save(user: entUser): Promise<number>;
     updateFailedAttempts(id: number, attempts: number, date: Date | null): Promise<void>;
     updateUserStatus(idUser: number, lActivo: boolean): Promise<void>;
     updateProfileStatus(idUsuarioUni: number, lActivo: boolean): Promise<void>;

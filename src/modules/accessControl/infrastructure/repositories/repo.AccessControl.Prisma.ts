@@ -84,19 +84,8 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
         return results.map(r => new entRol(r.idRol, r.cNombreRol, r.cTipoRol, r.cAbrevRol, r.lActivo, r.lVigente));
     }
 
-    async findRolesWithScope(context: SecurityContext, skip: number, take: number): Promise<{ roles: entRol[], total: number }> {
-        const where: any = { lVigente: true };
-
-        // Si el scope es LOCAL, solo vemos los roles que están asignados en nuestra oficina
-        if (context.scope === 'LOCAL' && context.idOficina) {
-            where.asignaciones = {
-                some: {
-                    idOficina: context.idOficina,
-                    lVigente: true,
-                    lActivo: true
-                }
-            };
-        }
+    async findRolesWithScope(_context: SecurityContext, skip: number, take: number): Promise<{ roles: entRol[], total: number }> {
+        const where: any = { lActivo: true, lVigente: true, cTipoRol: "UNIVERSIDAD" };
 
         const [total, rolesDb] = await prisma.$transaction([
             prisma.rol.count({ where }),
@@ -105,11 +94,6 @@ export class repoAccessControlPrisma implements portAccessControlRepository {
                 skip,
                 take,
                 orderBy: { cNombreRol: 'asc' },
-                include: {
-                    asignaciones: { 
-                        where: { lVigente: true, lActivo: true } 
-                    }
-                }
             })
         ]);
 

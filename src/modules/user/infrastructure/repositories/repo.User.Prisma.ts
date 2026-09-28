@@ -42,11 +42,12 @@ export class repoUserPrisma implements portUserRepository {
         return userDb ? UserMapper.toDomain(userDb) : null;
     }
 
-   async save(user: entUser): Promise<void> {
+   async save(user: entUser): Promise<number> {
         const userData = UserMapper.toPersistence(user);
-        await prisma.user.create({
+        const createdUser = await prisma.user.create({
             data: userData
         });
+        return createdUser.idUser;
     }
 
     async updateFailedAttempts(idUser: number, attempts: number, date: Date | null): Promise<void> {
